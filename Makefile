@@ -8,6 +8,7 @@ install_package:
 	venv/bin/pip freeze > requirements.txt
 freeze:
 	venv/bin/pip freeze > requirements.txt
+
 # Django
 makemigrations:
 	venv/bin/python manage.py makemigrations
