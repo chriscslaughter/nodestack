@@ -14,6 +14,8 @@ USER litecoin
 
 VOLUME ["/home/litecoin/.litecoin"]
 
-COPY --chown=litecoin ./../../config/litecoin.conf /home/litecoin/.litecoin/
+COPY --chown=litecoin ./litecoin.conf /home/litecoin/.litecoin/
+
+EXPOSE 9332
 
 CMD ["litecoind", "--conf=/home/litecoin/.litecoin/litecoin.conf"]

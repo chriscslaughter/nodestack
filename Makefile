@@ -9,6 +9,12 @@ install_package:
 freeze:
 	venv/bin/pip freeze > requirements.txt
 
+# Docker
+build_node:
+	cp config/${NODE}.conf node_images/${NODE}/${NODE}.conf
+	docker build -t ${NODE} node_images/${NODE}/
+	rm node_images/${NODE}/${NODE}.conf
+
 # Django
 makemigrations:
 	venv/bin/python manage.py makemigrations
