@@ -16,9 +16,13 @@ migrate:
 	venv/bin/python manage.py migrate
 shell:
 	venv/bin/python manage.py shell
+startapp:
+	venv/bin/python manage.py startapp ${APP}
+createsuperuser:
+	venv/bin/python manage.py createsuperuser
 runserver:
-	venv/bin/python manage.py runserver 0.0.0.0:2001
+	venv/bin/python manage.py runserver 0.0.0.0:8045
 runprod:
 	venv/bin/python manage.py check --deploy
 	venv/bin/python manage.py collectstatic --noinput
-	sudo venv/bin/gunicorn -w 3 --bind 0.0.0.0:2001 nodestack.wsgi
+	sudo venv/bin/gunicorn -w 3 --bind 0.0.0.0:8045 nodestack.wsgi
