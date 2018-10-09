@@ -9,6 +9,7 @@ CURRENCY_CHOICES = (
 class Currency(models.Model):
 	symbol = models.CharField(max_length=12, choices=CURRENCY_CHOICES, unique=True)
 	required_confirmations = models.PositiveIntegerField(default=3)
+	cold_storage_address = models.CharField(max_length=256, null=True)
 	def name(self):
 		return dict(CURRENCY_CHOICES)[self.symbol]
 
