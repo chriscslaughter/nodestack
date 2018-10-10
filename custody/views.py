@@ -30,10 +30,12 @@ class Status(views.APIView):
             latest_hash = rpc.make_call("getblockhash", [blockchaininfo["blocks"]])
             latest_block = rpc.make_call("getblock", [latest_hash])
             latest_time = latest_block["time"]
+            fee_rate = rpc.make_call("estimatesmartfee", [cur.required_confirmations])["feerate"] * 240 / 1024
             status_info = {
                 'blocks': blockchaininfo['blocks'],
                 'latest_block_time': latest_time,
-                'latest_block_age': (utc_now() - datetime_from_utc_timestamp(latest_time)).total_seconds()
+                'latest_block_age': (utc_now() - datetime_from_utc_timestamp(latest_time)).total_seconds(),
+                'fee_rate': fee_rate
             }
             # balance
             balance = {}
@@ -106,7 +108,7 @@ class DepositsColdStorageTransfer(views.APIView):
                     "txid": txid,
                     "created_at": utc_now().timestamp()
                 }
-                return Response(results, status=status.HTTP_202_ACCEPTED)
+                return Response(result, status=status.HTTP_202_ACCEPTED)
             else:
                 return Response({"msg": "Insufficient funds to transfer."}, status=status.HTTP_428_PRECONDITION_REQUIRED)
 
@@ -187,4 +189,3 @@ class WithdrawalsWithdrawal(views.APIView):
             }
             return Response(result, status=status.HTTP_202_ACCEPTED)
             
-
