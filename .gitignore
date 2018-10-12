@@ -109,3 +109,5 @@ venv.bak/
 # Nodestack [me]
 config/
 *.conf
+
+settings_env.py
