@@ -39,9 +39,13 @@ class Status(views.APIView):
             }
             # balance
             balance = {}
-            balance["deposits"] = rpc.make_call("getbalance", ["deposits", cur.required_confirmations])
-            balance["withdrawals"] = rpc.make_call("getbalance", ["withdrawals", cur.required_confirmations])
-            balance["cold_storage"] = rpc.make_call("getbalance", [cur.cold_storage_address, cur.required_confirmations, True])
+            balance["deposits"], balance["withdrawals"], balance["cold_storage"] = {}, {}, {}
+            balance["deposits"]["quantity"] = rpc.make_call("getbalance", ["deposits", cur.required_confirmations])
+            balance["deposits"]["value"] = balance["deposits"]["quantity"] * cur.price()
+            balance["withdrawals"]["quantity"] = rpc.make_call("getbalance", ["withdrawals", cur.required_confirmations])
+            balance["withdrawals"]["value"] = balance["withdrawals"]["quantity"] * cur.price()
+            balance["cold_storage"]["quantity"] = rpc.make_call("getbalance", [cur.cold_storage_address, cur.required_confirmations, True])
+            balance["cold_storage"]["value"] = balance["cold_storage"]["quantity"] * cur.price()
             status_info.update({"balance": balance})
             return Response(status_info, status=status.HTTP_200_OK)
 
@@ -188,4 +192,3 @@ class WithdrawalsWithdrawal(views.APIView):
                 "created_at": utc_now().timestamp()
             }
             return Response(result, status=status.HTTP_202_ACCEPTED)
-            
