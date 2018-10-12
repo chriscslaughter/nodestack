@@ -25,6 +25,8 @@ class Currency(models.Model):
 				"price": price
 			}
 		return CURRENCY_prices[self.symbol]["price"]
+	def __str__(self):
+		return str(self.symbol)
 
 class Node(models.Model):
 	currency = models.OneToOneField('custody.Currency', related_name='node', on_delete=models.CASCADE, null=True)
@@ -35,8 +37,14 @@ class Node(models.Model):
 class UserAddress(models.Model):
 	user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='addresses', on_delete=models.CASCADE)
 	currency = models.ForeignKey(Currency, related_name='user_addresses', on_delete=models.CASCADE)
-	address = models.CharField(max_length=256)
+	address = models.CharField(max_length=256, help_text="This is the public address associated with your key. Do NOT input your private key here under any circumstance!")
 	created_at = models.DateTimeField(auto_now_add=True)
+	def unique_error_message(self, model_class, unique_check):
+		print("Hello world!")
+		if model_class == type(self) and unique_check == ('user', 'currency'):
+			return f'You already have a user address for {self.currency}. Edit that instead.'
+		else:
+			return super().unique_error_message(model_class, unique_check)
 	class Meta:
 		unique_together = (
 			("user", "currency"),
