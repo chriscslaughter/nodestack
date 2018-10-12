@@ -9,12 +9,6 @@ install_package:
 freeze:
 	venv/bin/pip freeze > requirements.txt
 
-# Docker
-build_node:
-	cp config/${NODE}.conf node_images/${NODE}/${NODE}.conf
-	docker build -t ${NODE} node_images/${NODE}/
-	rm node_images/${NODE}/${NODE}.conf
-
 # Django
 makemigrations:
 	venv/bin/python manage.py makemigrations
@@ -32,3 +26,7 @@ runprod:
 	venv/bin/python manage.py check --deploy
 	venv/bin/python manage.py collectstatic --noinput
 	sudo venv/bin/gunicorn -w 3 --bind 0.0.0.0:8045 nodestack.wsgi
+
+# Django Management
+generate_key:
+	venv/bin/python manage.py generate_key --coin ${COIN}
