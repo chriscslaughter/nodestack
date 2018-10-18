@@ -43,6 +43,7 @@ class UserAddress(models.Model):
 	class Meta:
 		unique_together = (
 			("user", "currency"),
+			("address", "currency"),
 		)
 	def __str__(self):
 		return f"{self.currency}_{self.user}"
