@@ -47,7 +47,7 @@ class BTCCustody(BaseCoin):
         return Response(address_info, status=status.HTTP_201_CREATED)
 #
 
-    def deposits_get(self, request, coin, format=None):
+    def deposits_get(self, request, format=None):
         rpc = RPC(self.cur.node.ip_address, self.cur.node.user, self.cur.node.password)
         block = int(request.GET.get('block', 0))
         block_hash = rpc.make_call("getblockhash", [block])
@@ -65,7 +65,7 @@ class BTCCustody(BaseCoin):
         }
         return Response(result, status=status.HTTP_200_OK)
 
-    def depositscoldstoragetransfer_post(self, request, coin, format=None):
+    def depositscoldstoragetransfer_post(self, request, format=None):
         rpc = RPC(self.cur.node.ip_address, self.cur.node.user, self.cur.node.password)
         deposits_balance = rpc.make_call("getbalance", ["deposits", self.cur.required_confirmations])
         result = {
@@ -81,7 +81,7 @@ class BTCCustody(BaseCoin):
         else:
             return Response({"msg": "Insufficient funds to transfer."}, status=status.HTTP_428_PRECONDITION_REQUIRED)
 
-    def withdrawalsaddress_post(self, request, coin, format=None):
+    def withdrawalsaddress_post(self, request, format=None):
         rpc = RPC(self.cur.node.ip_address, self.cur.node.user, self.cur.node.password)
         address = rpc.make_call("getnewaddress", ["withdrawals"])
         address_info = {
@@ -90,7 +90,7 @@ class BTCCustody(BaseCoin):
         }
         return Response(address_info, status=status.HTTP_201_CREATED)
 
-    def withdrawals_get(self, request, coin, format=None):
+    def withdrawals_get(self, request, format=None):
         rpc = RPC(self.cur.node.ip_address, self.cur.node.user, self.cur.node.password)
         block = int(request.GET.get('block', 0))
         block_hash = rpc.make_call("getblockhash", [block])
@@ -108,7 +108,7 @@ class BTCCustody(BaseCoin):
         }
         return Response(result, status=status.HTTP_200_OK)
 
-    def withdrawalswithdrawal_post(self, request, coin, format=None):
+    def withdrawalswithdrawal_post(self, request, format=None):
         rpc = RPC(self.cur.node.ip_address, self.cur.node.user, self.cur.node.password)
         # check input
         if "address" not in request.data.keys() or "amount" not in request.data.keys():
@@ -133,5 +133,5 @@ class BTCCustody(BaseCoin):
         }
         return Response(result, status=status.HTTP_202_ACCEPTED)
 
-    def depositscoldstoragetransfer_post(self, request, coin, format=None):
+    def depositscoldstoragetransfer_post(self, request, format=None):
         pass
