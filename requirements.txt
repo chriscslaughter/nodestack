@@ -38,7 +38,7 @@ MarkupSafe==1.0
 parsimonious==0.8.0
 parso==0.3.1
 pluggy==0.7.1
-psycopg2==2.7.5
+psycopg2-binary==2.7.5
 pybitcoin==0.9.9
 pycparser==2.19
 pycryptodome==3.6.6
