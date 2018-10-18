@@ -51,6 +51,4 @@ class UserAddress(models.Model):
 class MultiSigAddress(models.Model):
 	currency = models.OneToOneField(Currency, related_name='cold_storage_address', on_delete=models.CASCADE)
 	address = models.CharField(max_length=256, null=True, blank=True)
-	user_addresses = models.ManyToManyField(
-		UserAddress,
-	)
+	user_addresses = models.ManyToManyField(UserAddress)
