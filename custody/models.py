@@ -40,22 +40,16 @@ class UserAddress(models.Model):
 	currency = models.ForeignKey(Currency, related_name='user_addresses', on_delete=models.CASCADE)
 	address = models.CharField(max_length=256, help_text="This is the public address associated with your key. Do NOT input your private key here under any circumstance!")
 	created_at = models.DateTimeField(auto_now_add=True)
-	def unique_error_message(self, model_class, unique_check):
-		print("Hello world!")
-		if model_class == type(self) and unique_check == ('user', 'currency'):
-			return f'You already have a user address for {self.currency}. Edit that instead.'
-		else:
-			return super().unique_error_message(model_class, unique_check)
 	class Meta:
 		unique_together = (
 			("user", "currency"),
 		)
+	def __str__(self):
+		return f"{self.currency}_{self.user}"
 
 class MultiSigAddress(models.Model):
 	currency = models.OneToOneField(Currency, related_name='cold_storage_address', on_delete=models.CASCADE)
 	address = models.CharField(max_length=256, null=True, blank=True)
-	user_addresses = ChainedManyToManyField(
+	user_addresses = models.ManyToManyField(
 		UserAddress,
-		chained_field="currency",
-		chained_model_field="user_addresses"
 	)

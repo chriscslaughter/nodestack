@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import Currency, Node, UserAddress
+from .models import Currency, Node, UserAddress, MultiSigAddress
 
 class NodeInline(admin.TabularInline):
 	model = Node
@@ -11,6 +11,11 @@ class CurrencyAdmin(admin.ModelAdmin):
 	model = Currency
 	list_display = ('symbol', 'name')
 	inlines = (NodeInline,)
+
+class MultiSigAddressAdmin(admin.ModelAdmin):
+	model = MultiSigAddress
+	list_display = ('currency', 'address')
+	fields = ('currency', 'user_addresses')
 
 class UserAddressAdmin(admin.ModelAdmin):
 	model = UserAddress
@@ -25,4 +30,5 @@ class UserAddressAdmin(admin.ModelAdmin):
 		super().save_model(request, obj, form, change)
 
 admin.site.register(Currency, CurrencyAdmin)
+admin.site.register(MultiSigAddress, MultiSigAddressAdmin)
 admin.site.register(UserAddress, UserAddressAdmin)

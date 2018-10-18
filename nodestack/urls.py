@@ -21,6 +21,7 @@ from django.views.generic.base import RedirectView
 from custody import urls as custody_urls
 
 urlpatterns = [
+    url(r'^chaining/', include('smart_selects.urls')),
     url(r'^$', RedirectView.as_view(url='/admin')),
     path('admin/', admin.site.urls),
     path('api/', include(custody_urls))
