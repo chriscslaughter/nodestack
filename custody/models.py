@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 
+from smart_selects.db_fields import ChainedManyToManyField
+
 CURRENCY_CHOICES = (
 	('BTC', 'Bitcoin'),
 	('LTC', 'Litecoin'),
@@ -10,7 +12,6 @@ CURRENCY_prices = {}
 class Currency(models.Model):
 	symbol = models.CharField(max_length=12, choices=CURRENCY_CHOICES, unique=True)
 	required_confirmations = models.PositiveIntegerField(default=3)
-	cold_storage_address = models.CharField(max_length=256, null=True)
 	def name(self):
 		return dict(CURRENCY_CHOICES)[self.symbol]
 	def price(self):
@@ -49,3 +50,12 @@ class UserAddress(models.Model):
 		unique_together = (
 			("user", "currency"),
 		)
+
+class MultiSigAddress(models.Model):
+	currency = models.OneToOneField(Currency, related_name='cold_storage_address', on_delete=models.CASCADE)
+	address = models.CharField(max_length=256, null=True, blank=True)
+	user_addresses = ChainedManyToManyField(
+		UserAddress,
+		chained_field="currency",
+		chained_model_field="user_addresses"
+	)
