@@ -35,7 +35,6 @@ def route_request(func):
             msg = "`%s` is not a method of class `%s`." \
                 % (method_name, custody_class.__name__)
             raise ValueError(msg)
-        print(args)
         return getattr(CUSTODY_MAP[coin], method_name)(*args[1:])
     return wrapper
 
