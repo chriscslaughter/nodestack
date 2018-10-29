@@ -6,6 +6,7 @@ class RPC(object):
         self.address = address
         self.username = username
         self.password = password
+
     def make_call(self, method, params=[]):
         import requests, json
         url = "http://{username}:{password}@{address}/".format(

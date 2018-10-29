@@ -1,16 +1,40 @@
+from abc import ABC, abstractmethod
 from rest_framework import views, permissions, status
 from rest_framework.response import Response
 
 from django.http import JsonResponse
-from .models import Currency
+from custody.models import Currency
 from lib.rpc import RPC, RPCException
 from lib.timetools import utc_now, datetime_from_utc_timestamp
-from custody.coin_views import BTCCustody, ETHCustody
 
-CUSTODY_MAP = {
-    'BTC': BTCCustody('BTC'),
-    'ETH': ETHCustody(),
-}
+class BaseCoin(ABC):
+    @abstractmethod
+    def status_get(self, request):
+        pass
+
+    @abstractmethod
+    def depositsaddress_post(self):
+        pass
+
+    @abstractmethod
+    def deposits_get(self):
+        pass
+
+    @abstractmethod
+    def depositscoldstoragetransfer_post(self):
+        pass
+
+    @abstractmethod
+    def withdrawalsaddress_post(self):
+        pass
+
+    @abstractmethod
+    def withdrawals_get(self):
+        pass
+
+    @abstractmethod
+    def withdrawalswithdrawal_post(self):
+        pass
 
 def _resolve_method_name(instance, wrapped_function):
     return instance.__class__.__name__.lower() + "_" + wrapped_function.__name__
@@ -93,3 +117,11 @@ class WithdrawalsWithdrawal(views.APIView):
     @route_request
     def post(self, request, coin, format=None):
         raise NotImplementedError('This should never be reached')
+
+from custody.views.btc import BTCCustody
+from custody.views.eth import ETHCustody
+
+CUSTODY_MAP = {
+    'BTC': BTCCustody('BTC'),
+    'ETH': ETHCustody(),
+}

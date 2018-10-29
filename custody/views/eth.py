@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from web3 import HTTPProvider, Web3
 
-from custody.coin_views import BaseCoin
+from custody.views import BaseCoin
 from custody.models import Currency
 from lib.timetools import utc_now, datetime_from_utc_timestamp
 
@@ -18,11 +18,17 @@ class ETHCustody(BaseCoin):
     def status_get(self, request):
         final_block = self._determine_final_block()
         block = self.w3.eth.getBlock(final_block)
+        cold_storage_quantity = self._to_eth(self.w3.eth.getBalance(self.cur.cold_storage_address.address))
         status_info = {
             'blocks': self._determine_final_block(),
+            'required_confirmations': self.cur.required_confirmations,
             'latest_block_time': block.timestamp,
             'latest_block_age': (utc_now() - datetime.datetime.fromtimestamp(block.timestamp, datetime.timezone.utc)),
-            'fee_rate': self.w3.eth.gasPrice
+            'fee_rate': self._to_eth(self.w3.eth.gasPrice),
+            'cold_storage': {
+                'quantity': cold_storage_quantity,
+                'value': '${:,.2f}'.format(cold_storage_quantity * self.cur.price()),
+            }
         }
         return Response(status_info, status=status.HTTP_200_OK)
 
@@ -38,16 +44,11 @@ class ETHCustody(BaseCoin):
         starting_block = int(request.GET.get('block', 0))
         final_block = self._determine_final_block()
         block = self.w3.eth.getBlock(starting_block)
-        deposit_addresses = {
-            a.address.lower(): a
-            for a in DepositAddress.objects.filter(symbol='ETH')
-        }
         transactions = []
-        while(block and start_at_block <= final_block):
+        while(block and starting_block <= final_block):
             for transaction in block['transactions']:
                 transaction_details = self.w3.eth.getTransaction(transaction)
-                if not transaction_details.to or transaction_details.value == 0 \
-                   or transaction_details.to.lower() not in deposit_addresses:
+                if not transaction_details.to or transaction_details.value == 0:
                     continue
                 transactions.append({
                     'address': transaction_details.to,
@@ -81,7 +82,7 @@ class ETHCustody(BaseCoin):
         final_block = self._determine_final_block()
         block = self.w3.eth.getBlock(starting_block)
         transactions = []
-        while(block and start_at_block <= final_block):
+        while(block and starting_block <= final_block):
             for transaction in block['transactions']:
                 transaction_details = self.w3.eth.getTransaction(transaction)
                 if not transaction_details.to or transaction_details.value == 0 \
@@ -90,7 +91,6 @@ class ETHCustody(BaseCoin):
                 transactions.append({
                     'address': transaction_details.to,
                     'amount': transaction_details.value,
-                    'confirmations': self.cur.required_confirmations,
                     'txid': transaction.hex().lower(),
                     'time': block.timestamp
                 })
@@ -113,7 +113,7 @@ class ETHCustody(BaseCoin):
             return Response({"msg": "Insufficient funds to transfer."}, status=status.HTTP_428_PRECONDITION_REQUIRED)
 
         transaction_details = {
-            "to": self.w3.toChecksumAddress(address),
+            "to": self.w3.toChecksumAddress(recipient),
             "from": self.hot_wallet_address,
             "value": amount
         }
@@ -144,3 +144,6 @@ class ETHCustody(BaseCoin):
             final_block = final_block - self.cur.required_confirmations
 
         return final_block
+
+    def _to_eth(self, amount):
+        return amount / float(1000000000000000000)
