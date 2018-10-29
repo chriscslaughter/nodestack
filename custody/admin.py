@@ -2,6 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 from .models import Currency, Node, UserAddress, MultiSigAddress
+from .forms import MultiSigAddressForm
 
 class NodeInline(admin.TabularInline):
 	model = Node
@@ -14,8 +15,7 @@ class CurrencyAdmin(admin.ModelAdmin):
 
 class MultiSigAddressAdmin(admin.ModelAdmin):
 	model = MultiSigAddress
-	list_display = ('currency', 'address')
-	fields = ('currency', 'user_addresses')
+	form = MultiSigAddressForm
 
 class UserAddressAdmin(admin.ModelAdmin):
 	model = UserAddress
