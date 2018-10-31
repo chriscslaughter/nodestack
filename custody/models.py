@@ -12,6 +12,7 @@ CURRENCY_prices = {}
 class Currency(models.Model):
     symbol = models.CharField(max_length=12, choices=CURRENCY_CHOICES, unique=True)
     required_confirmations = models.PositiveIntegerField(default=3)
+    transfer_threshold = models.PositiveIntegerField(default=1)
     def name(self):
         return dict(CURRENCY_CHOICES)[self.symbol]
     def price(self):

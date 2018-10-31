@@ -45,12 +45,16 @@ def route_request(func):
     coin data requested.
     """
     def wrapper(*args, **kwargs):
+        custody_map = {
+            'BTC': BTCCustody('BTC'),
+            'ETH': ETHCustody(),
+        }
         coin = kwargs['coin']
         del kwargs['coin']
         if coin not in [cur.symbol for cur in Currency.objects.all()] or \
-           coin not in CUSTODY_MAP:
+           coin not in custody_map:
             return Response({'error': f"Symbol {coin} not supported on this Nodestack."}, status=status.HTTP_404_NOT_FOUND)
-        custody_class = CUSTODY_MAP[coin]
+        custody_class = custody_map[coin]
         cur = Currency.objects.get(symbol=coin)
         if not hasattr(cur, "node"):
             return Response({'error': f"Symbol {coin} does not have a node on the Nodestack."}, status=status.HTTP_404_NOT_FOUND)
@@ -59,7 +63,7 @@ def route_request(func):
             msg = "`%s` is not a method of class `%s`." \
                 % (method_name, custody_class.__name__)
             raise ValueError(msg)
-        return getattr(CUSTODY_MAP[coin], method_name)(*args[1:])
+        return getattr(custody_map[coin], method_name)(*args[1:])
     return wrapper
 
 class Status(views.APIView):
@@ -120,8 +124,3 @@ class WithdrawalsWithdrawal(views.APIView):
 
 from custody.views.btc import BTCCustody
 from custody.views.eth import ETHCustody
-
-CUSTODY_MAP = {
-    'BTC': BTCCustody('BTC'),
-    'ETH': ETHCustody(),
-}

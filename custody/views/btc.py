@@ -1,5 +1,3 @@
-import json
-
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -7,9 +5,6 @@ from custody.views import BaseCoin
 from custody.models import Currency
 from lib.rpc import RPC, RPCException
 from lib.timetools import utc_now, datetime_from_utc_timestamp
-
-LABEL_DEPOSITS = 'deposits'
-LABEL_WITHDRAWALS = 'withdrawals'
 
 class BTCCustody(BaseCoin):
     def __init__(self, coin):
@@ -34,20 +29,19 @@ class BTCCustody(BaseCoin):
         # balance
 
         balance = {}
-        balance["deposits"], balance["withdrawals"], balance["cold_storage"] = {}, {}, {}
-        balance["deposits"]["quantity"] = self.rpc.make_call('getreceivedbylabel',
-                                                             [LABEL_DEPOSITS, self.cur.required_confirmations])
-        balance["deposits"]["value"] = '${:,.2f}'.format(balance["deposits"]["quantity"] * self.cur.price())
-        balance["withdrawals"]["quantity"] = self.rpc.make_call('getreceivedbylabel',
-                                                             [LABEL_WITHDRAWALS, self.cur.required_confirmations])
-        balance["withdrawals"]["value"] = '${:,.2f}'.format(balance["withdrawals"]["quantity"] * self.cur.price())
+        balance["hot_wallet"], balance["cold_storage"] = {}, {}
+
+        balance["hot_wallet"]["quantity"] = self.rpc.make_call('getbalance',
+                                                               ['*', self.cur.required_confirmations])
+        balance["hot_wallet"]["value"] = '${:,.2f}'.format(balance["hot_wallet"]["quantity"] * self.cur.price())
+
         balance["cold_storage"]["quantity"] = self.rpc.make_call('getreceivedbyaddress', [self.cur.cold_storage_address.address, self.cur.required_confirmations])
         balance["cold_storage"]["value"] = '${:,.2f}'.format(balance["cold_storage"]["quantity"] * self.cur.price())
         status_info.update({"balance": balance})
         return Response(status_info, status=status.HTTP_200_OK)
 
     def depositsaddress_post(self, request):
-        address = self.rpc.make_call("getnewaddress", [LABEL_DEPOSITS])
+        address = self.rpc.make_call("getnewaddress")
         address_info = {
             "address": address,
             "created_at": utc_now().timestamp()
@@ -69,22 +63,20 @@ class BTCCustody(BaseCoin):
                 "amount": transaction["amount"],
                 "confirmations": transaction["confirmations"],
                 "txid": transaction["txid"],
-                "time": transaction["timereceived"]
-            } for transaction in transactions["transactions"] if 'label' in transaction and
-                                                              transaction['label'] == LABEL_DEPOSITS and
-                                                              transaction["amount"] >= 0]
+                "time_received": transaction["timereceived"]
+            } for transaction in transactions["transactions"]
+                  if transaction["amount"] >= 0]
         }
         return Response(result, status=status.HTTP_200_OK)
 
     def depositscoldstoragetransfer_post(self, request, format=None):
-        deposits_balance = self.rpc.make_call('getreceivedbylabel',
-                                              [LABEL_DEPOSITS, self.cur.required_confirmations])
+        hot_wallet_balance = self.rpc.make_call('getbalance', ['*', self.cur.required_confirmations])
 
         result = {
-            "starting_balance": deposits_balance
+            "starting_balance": hot_wallet_balance
         }
-        if deposits_balance > 0:
-            txid = self.rpc.make_call("sendtoaddress", [self.cur.cold_storage_address, deposits_balance])
+        if hot_wallet_balance > 0:
+            txid = self.rpc.make_call("sendtoaddress", [self.cur.cold_storage_address, hot_wallet_balance])
             result = {
                 "txid": txid,
                 "created_at": utc_now().timestamp()
@@ -94,7 +86,7 @@ class BTCCustody(BaseCoin):
             return Response({"msg": "Insufficient funds to transfer."}, status=status.HTTP_428_PRECONDITION_REQUIRED)
 
     def withdrawalsaddress_post(self, request, format=None):
-        address = self.rpc.make_call("getnewaddress", [LABEL_WITHDRAWALS])
+        address = self.rpc.make_call("getnewaddress")
         address_info = {
             "address": address,
             "created_at": utc_now().timestamp()
@@ -107,14 +99,16 @@ class BTCCustody(BaseCoin):
         transactions = self.rpc.make_call("listsinceblock", [block_hash, self.cur.required_confirmations])
         block_height = self.rpc.make_call("getblock", [transactions["lastblock"]])["height"]
         result = {
-            "lastblock": block_height,
-            "transactions": [{
-                "address": transaction["address"],
-                "amount": -transaction["amount"],
-                "confirmations": transaction["confirmations"],
-                "txid": transaction["txid"],
-                "time": transaction["timereceived"]
-            } for transaction in transactions["transactions"] if transaction["account"] == "withdrawals" and transaction["amount"] < 0]
+            'lastblock': block_height,
+            'transactions': [{
+                'address': transaction['address'],
+                'amount': -transaction['amount'],
+                'confirmations': transaction['confirmations'],
+                'txid': transaction['txid'],
+                'time': transaction['timereceived'],
+                'fee': transaction['fee']
+            } for transaction in transactions["transactions"]
+                if transaction['amount'] < 0]
         }
         return Response(result, status=status.HTTP_200_OK)
 
@@ -131,7 +125,7 @@ class BTCCustody(BaseCoin):
         if not self.rpc.make_call("validateaddress", [address])["isvalid"]:
             return Response({"msg": "Invalid address."}, status=status.HTTP_400_BAD_REQUEST)
         # check sufficient funds
-        balance = self.rpc.make_call('getreceivedbylabel', [LABEL_WITHDRAWALS, self.cur.required_confirmations])
+        balance = self.rpc.make_call('getbalance', ['*', self.cur.required_confirmations])
         if balance <= amount:
             return Response({"msg": "Insufficient funds to transfer."}, status=status.HTTP_428_PRECONDITION_REQUIRED)
         # initiate withdrawal
