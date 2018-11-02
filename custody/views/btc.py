@@ -6,6 +6,8 @@ from custody.models import Currency
 from lib.rpc import RPC, RPCException
 from lib.timetools import utc_now, datetime_from_utc_timestamp
 
+LABEL_HOT_WALLET = 'hot_wallet'
+
 class BTCCustody(BaseCoin):
     def __init__(self, coin):
         assert coin in ['BTC', 'LTC', 'BCC']
@@ -31,8 +33,7 @@ class BTCCustody(BaseCoin):
         balance = {}
         balance["hot_wallet"], balance["cold_storage"] = {}, {}
 
-        balance["hot_wallet"]["quantity"] = self.rpc.make_call('getbalance',
-                                                               ['*', self.cur.required_confirmations])
+        balance["hot_wallet"]["quantity"] = self.rpc.make_call('getreceivedbylabel', [LABEL_HOT_WALLET, self.cur.required_confirmations])
         balance["hot_wallet"]["value"] = '${:,.2f}'.format(balance["hot_wallet"]["quantity"] * self.cur.price())
 
         balance["cold_storage"]["quantity"] = self.rpc.make_call('getreceivedbyaddress', [self.cur.cold_storage_address.address, self.cur.required_confirmations])
@@ -41,7 +42,7 @@ class BTCCustody(BaseCoin):
         return Response(status_info, status=status.HTTP_200_OK)
 
     def depositsaddress_post(self, request):
-        address = self.rpc.make_call("getnewaddress")
+        address = self.rpc.make_call("getnewaddress", [LABEL_HOT_WALLET])
         address_info = {
             "address": address,
             "created_at": utc_now().timestamp()
@@ -65,12 +66,14 @@ class BTCCustody(BaseCoin):
                 "txid": transaction["txid"],
                 "time_received": transaction["timereceived"]
             } for transaction in transactions["transactions"]
-                  if transaction["amount"] >= 0]
+              if transaction["amount"] >= 0 and
+              'label' in transaction and
+              transaction['label'] == LABEL_HOT_WALLET]
         }
         return Response(result, status=status.HTTP_200_OK)
 
     def depositscoldstoragetransfer_post(self, request, format=None):
-        hot_wallet_balance = self.rpc.make_call('getbalance', ['*', self.cur.required_confirmations])
+        hot_wallet_balance = self.rpc.make_call('getreceivedbylabel', [LABEL_HOT_WALLET, self.cur.required_confirmations])
 
         result = {
             "starting_balance": hot_wallet_balance
@@ -86,7 +89,7 @@ class BTCCustody(BaseCoin):
             return Response({"msg": "Insufficient funds to transfer."}, status=status.HTTP_428_PRECONDITION_REQUIRED)
 
     def withdrawalsaddress_post(self, request, format=None):
-        address = self.rpc.make_call("getnewaddress")
+        address = self.rpc.make_call("getnewaddress", ['hot_wallet'])
         address_info = {
             "address": address,
             "created_at": utc_now().timestamp()
@@ -100,16 +103,19 @@ class BTCCustody(BaseCoin):
         block_height = self.rpc.make_call("getblock", [transactions["lastblock"]])["height"]
         result = {
             'lastblock': block_height,
-            'transactions': [{
-                'address': transaction['address'],
-                'amount': -transaction['amount'],
-                'confirmations': transaction['confirmations'],
-                'txid': transaction['txid'],
-                'time': transaction['timereceived'],
-                'fee': transaction['fee']
-            } for transaction in transactions["transactions"]
-                if transaction['amount'] < 0]
+            'transactions': []
         }
+        for transaction in transactions['transactions']:
+            print(transaction)
+            if transaction['amount'] >= 0 and 'label' in transaction and transaction['label'] == LABEL_HOT_WALLET:
+                result['transactions'].append({
+                        'address': transaction['address'],
+                        'amount': -transaction['amount'],
+                        'confirmations': transaction['confirmations'],
+                        'txid': transaction['txid'],
+                        'time': transaction['timereceived'],
+                        'fee': transaction['fee']
+                })
         return Response(result, status=status.HTTP_200_OK)
 
     def withdrawalswithdrawal_post(self, request, format=None):
