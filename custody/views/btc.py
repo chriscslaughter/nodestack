@@ -106,7 +106,6 @@ class BTCCustody(BaseCoin):
             'transactions': []
         }
         for transaction in transactions['transactions']:
-            print(transaction)
             if transaction['amount'] >= 0 and 'label' in transaction and transaction['label'] == LABEL_HOT_WALLET:
                 result['transactions'].append({
                         'address': transaction['address'],

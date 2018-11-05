@@ -25,9 +25,14 @@ class ETHCustody(BaseCoin):
             'latest_block_time': block.timestamp,
             'latest_block_age': (utc_now() - datetime.datetime.fromtimestamp(block.timestamp, datetime.timezone.utc)),
             'fee_rate': self._to_eth(self.w3.eth.gasPrice),
-            'cold_storage': {
-                'quantity': cold_storage_quantity,
-                'value': '${:,.2f}'.format(cold_storage_quantity * self.cur.price()),
+            'balance': {
+                'cold_storage': {
+                    'quantity': cold_storage_quantity,
+                    'value': '${:,.2f}'.format(cold_storage_quantity * self.cur.price()),
+                },
+                'hot_wallet': {
+                    'quantity': 0
+                }
             }
         }
         return Response(status_info, status=status.HTTP_200_OK)
@@ -40,15 +45,17 @@ class ETHCustody(BaseCoin):
         }
         return Response(address_info, status=status.HTTP_201_CREATED)
 
-    def deposits_get(self, request, coin, format=None):
+    def deposits_get(self, request, format=None):
         starting_block = int(request.GET.get('block', 0))
         final_block = self._determine_final_block()
         block = self.w3.eth.getBlock(starting_block)
+        accounts = self.w3.eth.accounts
         transactions = []
         while(block and starting_block <= final_block):
             for transaction in block['transactions']:
                 transaction_details = self.w3.eth.getTransaction(transaction)
-                if not transaction_details.to or transaction_details.value == 0:
+                if not transaction_details.to or transaction_details.value == 0 or \
+                   transaction_details.to not in accounts:
                     continue
                 transactions.append({
                     'address': transaction_details.to,
@@ -77,22 +84,24 @@ class ETHCustody(BaseCoin):
         }
         return Response(address_info, status=status.HTTP_201_CREATED)
 
-    def withdrawals_get(self, request, coin, format=None):
+    def withdrawals_get(self, request, format=None):
         starting_block = int(request.GET.get('block', 0))
         final_block = self._determine_final_block()
         block = self.w3.eth.getBlock(starting_block)
         transactions = []
+        accounts = self.w3.eth.accounts
         while(block and starting_block <= final_block):
             for transaction in block['transactions']:
                 transaction_details = self.w3.eth.getTransaction(transaction)
                 if not transaction_details.to or transaction_details.value == 0 \
-                   or transaction_details['from'].lower() != self.hot_wallet_address:
+                   or transaction_details['from'].lower() != self.hot_wallet_address or \
+                   transaction_details.to not in accounts:
                     continue
                 transactions.append({
                     'address': transaction_details.to,
                     'amount': transaction_details.value,
                     'txid': transaction.hex().lower(),
-                    'time': block.timestamp
+                    'time_received': block.timestamp
                 })
             starting_block += 1
             block = self.w3.eth.getBlock(starting_block)
@@ -103,7 +112,7 @@ class ETHCustody(BaseCoin):
 
         return Response(result, status=status.HTTP_200_OK)
 
-    def withdrawalswithdrawal_post(self, request, coin, format=None):
+    def withdrawalswithdrawal_post(self, request, format=None):
         recipient = request.data.get('address')
         amount = int(request.data.get('amount', 0))
         if not recipient or not amount:
