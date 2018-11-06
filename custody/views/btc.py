@@ -68,7 +68,8 @@ class BTCCustody(BaseCoin):
             } for transaction in transactions["transactions"]
               if transaction["amount"] >= 0 and
               'label' in transaction and
-              transaction['label'] == LABEL_HOT_WALLET]
+              transaction['label'] == LABEL_HOT_WALLET and
+              transaction['category'] == 'receive']
         }
         return Response(result, status=status.HTTP_200_OK)
 
@@ -106,7 +107,9 @@ class BTCCustody(BaseCoin):
             'transactions': []
         }
         for transaction in transactions['transactions']:
-            if transaction['amount'] >= 0 and 'label' in transaction and transaction['label'] == LABEL_HOT_WALLET:
+            if transaction['amount'] >= 0 and \
+               'label' in transaction and transaction['label'] == LABEL_HOT_WALLET and \
+               transaction['category'] == 'send':
                 result['transactions'].append({
                         'address': transaction['address'],
                         'amount': -transaction['amount'],
