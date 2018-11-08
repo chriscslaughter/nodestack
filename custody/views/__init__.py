@@ -1,43 +1,21 @@
 from abc import ABC, abstractmethod
-from rest_framework import views, permissions, status
+from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
-from django.http import JsonResponse
 from custody.models import Currency
-from lib.rpc import RPC, RPCException
-from lib.timetools import utc_now, datetime_from_utc_timestamp
 
 class BaseCoin(ABC):
     @abstractmethod
-    def status_get(self, request):
+    def get_deposit_address(self, request):
         pass
 
     @abstractmethod
-    def depositsaddress_post(self):
-        pass
-
-    @abstractmethod
-    def deposits_get(self):
-        pass
-
-    @abstractmethod
-    def depositscoldstoragetransfer_post(self):
-        pass
-
-    @abstractmethod
-    def withdrawalsaddress_post(self):
-        pass
-
-    @abstractmethod
-    def withdrawals_get(self):
-        pass
-
-    @abstractmethod
-    def withdrawalswithdrawal_post(self):
+    def list_transactions(self, request):
         pass
 
 def _resolve_method_name(instance, wrapped_function):
-    return instance.__class__.__name__.lower() + "_" + wrapped_function.__name__
+    return wrapped_function.__name__
 
 def route_request(func):
     """
@@ -63,64 +41,18 @@ def route_request(func):
             msg = "`%s` is not a method of class `%s`." \
                 % (method_name, custody_class.__name__)
             raise ValueError(msg)
-        return getattr(custody_map[coin], method_name)(*args[1:])
+        return getattr(custody_map[coin], method_name)(*args)
     return wrapper
 
-class Status(views.APIView):
-    """
-    Get the status of the specific node.
-    """
-    @route_request
-    def get(self, request, coin, format=None):
-        raise NotImplementedError('This should never be reached')
+@api_view(['GET'])
+@route_request
+def list_transactions(request, coin):
+    raise NotImplementedError('This should never be reached')
 
-class DepositsAddress(views.APIView):
-    """
-    Get a new deposit address.
-    """
-    @route_request
-    def post(self, request, coin, format=None):
-        raise NotImplementedError('This should never be reached')
-
-class Deposits(views.APIView):
-    """
-    List all deposits [since block number].
-    """
-    @route_request
-    def get(self, request, coin, format=None):
-        raise NotImplementedError('This should never be reached')
-
-class DepositsColdStorageTransfer(views.APIView):
-    """
-    List all deposits [since block number].
-    """
-    @route_request
-    def post(self, request, coin, format=None):
-        raise NotImplementedError('This should never be reached')
-
-class WithdrawalsAddress(views.APIView):
-    """
-    Get a new deposit address.
-    """
-    @route_request
-    def post(self, request, coin, format=None):
-        raise NotImplementedError('This should never be reached')
-
-class Withdrawals(views.APIView):
-    """
-    List all withdrawals [since block number].
-    """
-    @route_request
-    def get(self, request, coin, format=None):
-        raise NotImplementedError('This should never be reached')
-
-class WithdrawalsWithdrawal(views.APIView):
-    """
-    Initiate a withdrawal to address.
-    """
-    @route_request
-    def post(self, request, coin, format=None):
-        raise NotImplementedError('This should never be reached')
+@api_view(['POST'])
+@route_request
+def get_deposit_address(request, coin):
+    raise NotImplementedError('This should never be reached')
 
 from custody.views.btc import BTCCustody
 from custody.views.eth import ETHCustody
