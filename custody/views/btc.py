@@ -11,6 +11,33 @@ class BTCCustody(BaseCoin):
         assert coin in ['BTC', 'LTC', 'BCC']
         self.cur = Currency.objects.get(symbol=coin)
         self.rpc = RPC(self.cur.node.ip_address, self.cur.node.user, self.cur.node.password)
+    
+    def get_status(self, request):
+        # general status
+        blockchaininfo = self.rpc.make_call("getblockchaininfo", [])
+        latest_hash = self.rpc.make_call("getblockhash", [blockchaininfo["blocks"]])
+        latest_block = self.rpc.make_call("getblock", [latest_hash])
+        latest_time = latest_block["time"]
+        fee_rate = self.rpc.make_call("estimatesmartfee", [self.cur.required_confirmations])["feerate"] * 240 / 1024
+        status_info = {
+            'blocks': blockchaininfo['blocks'],
+            'required_confirmations': self.cur.required_confirmations,
+            'latest_block_time': latest_time,
+            'latest_block_age': (utc_now() - datetime_from_utc_timestamp(latest_time)).total_seconds(),
+            'fee_rate': fee_rate
+        }
+        # balance
+
+        balance = {}
+        balance["hot_wallet"], balance["cold_storage"] = {}, {}
+
+        balance["hot_wallet"]["quantity"] = self.rpc.make_call('getbalance', ['*', self.cur.required_confirmations])
+        balance["hot_wallet"]["value"] = '${:,.2f}'.format(balance["hot_wallet"]["quantity"] * self.cur.price())
+
+        balance["cold_storage"]["quantity"] = self.rpc.make_call('getreceivedbyaddress', [self.cur.cold_storage_address.address, self.cur.required_confirmations])
+        balance["cold_storage"]["value"] = '${:,.2f}'.format(balance["cold_storage"]["quantity"] * self.cur.price())
+        status_info.update({"balance": balance})
+        return Response(status_info, status=status.HTTP_200_OK)
 
     def list_transactions(self, request):
         block = request.GET.get('block')

@@ -49,6 +49,11 @@ def route_request(func):
 def list_transactions(request, coin):
     raise NotImplementedError('This should never be reached')
 
+@api_view(['GET'])
+@route_request
+def get_status(request, coin):
+    raise NotImplementedError('This should never be reached')
+
 @api_view(['POST'])
 @route_request
 def get_deposit_address(request, coin):

@@ -9,7 +9,7 @@ from . import views
 urlpatterns = [
   url(r'^$', get_schema_view()),
   path("<slug:coin>/transactions", views.list_transactions, name='transactions'),
-  # path("<slug:coin>/status", views.Status.as_view(), name='status'),
+  path("<slug:coin>/status", views.get_status, name='status'),
   path("<slug:coin>/deposits/address", views.get_deposit_address, name='deposits_address'),
   # path("<slug:coin>/deposits", views.Deposits.as_view(), name='deposits'),
   # path("<slug:coin>/deposits/cold_storage_transfer", views.DepositsColdStorageTransfer.as_view(), name='deposits_cold_storage_transfer'),
