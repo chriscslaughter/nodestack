@@ -59,5 +59,10 @@ def get_status(request, coin):
 def get_deposit_address(request, coin):
     raise NotImplementedError('This should never be reached')
 
+@api_view(['POST'])
+@route_request
+def submit_withdrawal(request, coin):
+    raise NotImplementedError('This should never be reached')
+
 from custody.views.btc import BTCCustody
 from custody.views.eth import ETHCustody

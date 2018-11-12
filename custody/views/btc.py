@@ -70,3 +70,27 @@ class BTCCustody(BaseCoin):
             "created_at": utc_now().timestamp()
         }
         return Response(address_info, status=status.HTTP_201_CREATED)
+
+    def submit_withdrawal(self, request):
+        # check input
+        if "address" not in request.data.keys() or "amount" not in request.data.keys():
+            return Response({"msg": "Must specify address and amount."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            amount = float(request.data["amount"])
+            assert amount > 0
+        except:
+            return Response({"msg": "Invalid amount."}, status=status.HTTP_400_BAD_REQUEST)
+        address = request.data["address"]
+        if not self.rpc.make_call("validateaddress", [address])["isvalid"]:
+            return Response({"msg": "Invalid address."}, status=status.HTTP_400_BAD_REQUEST)
+        # check sufficient funds
+        balance = self.rpc.make_call('getbalance', ['*', self.cur.required_confirmations])
+        if balance <= amount:
+            return Response({"msg": "Insufficient funds to transfer."}, status=status.HTTP_428_PRECONDITION_REQUIRED)
+        # initiate withdrawal
+        txid = self.rpc.make_call("sendtoaddress", [address, amount])
+        result = {
+            "txid": txid,
+            "created_at": utc_now().timestamp()
+        }
+        return Response(result, status=status.HTTP_202_ACCEPTED)
