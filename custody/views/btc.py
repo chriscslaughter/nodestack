@@ -6,13 +6,22 @@ from custody.models import Currency
 from lib.rpc import RPC, RPCException
 from lib.timetools import utc_now, datetime_from_utc_timestamp
 
+#using a local cache to prevent repeated saves to the db
+REQUIRED_CONFIRMATIONS = {}
+
 class BTCCustody(BaseCoin):
     def __init__(self, coin):
         assert coin in ['BTC', 'LTC', 'BCC']
+        self.coin = coin
         self.cur = Currency.objects.get(symbol=coin)
         self.rpc = RPC(self.cur.node.ip_address, self.cur.node.user, self.cur.node.password)
-    
+
     def get_status(self, request):
+        required_confirmations = request.GET['required_confirmations']
+        if REQUIRED_CONFIRMATIONS.get(self.cur.symbol) != required_confirmations:
+            REQUIRED_CONFIRMATIONS[self.cur.symbol] = required_confirmations
+            self.cur.required_confirmations = int(required_confirmations)
+            self.cur.save()
         # general status
         blockchaininfo = self.rpc.make_call("getblockchaininfo", [])
         latest_hash = self.rpc.make_call("getblockhash", [blockchaininfo["blocks"]])
