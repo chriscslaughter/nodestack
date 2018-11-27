@@ -53,3 +53,18 @@ class MultiSigAddress(models.Model):
     currency = models.OneToOneField(Currency, related_name='cold_storage_address', on_delete=models.CASCADE)
     address = models.CharField(max_length=256, null=True, blank=True)
     user_addresses = models.ManyToManyField(UserAddress)
+
+class TransferRequest(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='transfer_requests', on_delete=models.CASCADE)
+    multisig_address = models.ForeignKey(MultiSigAddress, related_name='transfer_requests', on_delete=models.DO_NOTHING)
+    user_agent = models.CharField(max_length=200)
+    ip_address = models.CharField(max_length=50)
+    amount = models.DecimalField(max_digits=32, decimal_places=8)
+
+class TransferRequestSignature(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='transfer_requests', on_delete=models.DO_NOTHING)
+    transfer_request = models.ForeignKey(TransferRequest, related_name='transfer_request_signatures', on_delete=models.DO_NOTHING)
+    user_agent = models.CharField(max_length=200)
+    ip_address = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    transaction_body = models.CharField(max_length=1500)
