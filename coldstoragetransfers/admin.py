@@ -1,8 +1,9 @@
 from django.contrib import admin
-from django.utils.html import format_html_join
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 from coldstoragetransfers.models import TransferRequest, TransferRequestSignature
+from coldstoragetransfers.forms import TransferRequestForm
 
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -16,23 +17,42 @@ def get_client_ip(request):
 class TransferRequestSignatureInline(admin.TabularInline):
     model = TransferRequestSignature
 
+    def get_changeform_initial_data(self, request):
+        return {
+            'user_agent': request.META['HTTP_USER_AGENT'],
+            'ip_address': get_client_ip(request)
+        }
+
 class TransferRequestAdmin(admin.ModelAdmin):
+    #form = TransferRequestForm
     inlines = [
         TransferRequestSignatureInline
     ]
     model = TransferRequest
-    # exclude = ('user_agent', 'ip_address', 'user')
-    readonly_fields = ('user_agent', 'ip_address')
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return ('ip_address', 'user_agent')
+
+    return super().get_readonly_fields(request, obj)
+
+    def get_exclude(self, request, obj=None):
+        if not obj:
+            return ('user', 'ip_address', 'user_agent')
+
+        return super().get_exclude(request, obj)
+
 
     def get_changeform_initial_data(self, request):
         return {
-            'ip_address': get_client_ip(request),
-            # 'user_agent': request.META['HTTP_USER_AGENT']
+            'user_agent': request.META['HTTP_USER_AGENT'],
+            'ip_address': get_client_ip(request)
         }
 
-    def user_agent(self, instance):
-        return mark_safe("<span class='errors'>I can't determine this address.</span>")
-
-    user_agent.short_description = 'short desc'
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        obj.user_agent = request.META['HTTP_USER_AGENT']
+        obj.ip_address = get_client_ip(request)
+        obj.save()
 
 admin.site.register(TransferRequest, TransferRequestAdmin)
