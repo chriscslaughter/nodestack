@@ -6,8 +6,8 @@ from django.shortcuts import render
 from django.contrib.auth.models import User
 
 from nodestack.resource import get_redis
-from coldstoragetransfers.models import TransferRequest, TransferRequestSignatureForm
-from coldstoragetransfers.forms import TransferRequestForm, TransferRequestForm
+from coldstoragetransfers.models import TransferRequest, TransferRequestSignature
+from coldstoragetransfers.forms import TransferRequestForm, TransferRequestSignatureForm
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/admin')
 def transfer_list(request):
