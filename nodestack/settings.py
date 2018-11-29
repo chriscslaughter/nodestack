@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'custody',
+    'bootstrap4',
+    'coldstoragetransfers',
     'rest_framework'
 ]
 

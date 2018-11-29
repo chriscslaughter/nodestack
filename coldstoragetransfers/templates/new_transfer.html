@@ -1,0 +1,10 @@
+{% load static %}
+{% load bootstrap4 %}
+{% bootstrap_css %}
+
+<link rel="stylesheet" type="text/css"  href="{% static 'admin/css/base.css' %}">
+<form class="auth-form" method="POST">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    <button class="btn submit-btn" type="submit">Create</button>
+</form>

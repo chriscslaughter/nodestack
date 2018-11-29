@@ -14,9 +14,10 @@ class Command(BaseCommand):
         priv = None
         address = None
         if options['coin'] == "BTC":
-        	key = bit.Key()
-        	priv = key.to_hex()
-        	address = key.address
+            key = bit.Key()
+            priv = key.to_hex()
+            address = key.address
         print("Generated {} key:".format(options['coin']))
         print("     priv: " + str(priv))
         print("  address: " + str(address))
+        print("      pub: " + str(key.public_key.hex()))

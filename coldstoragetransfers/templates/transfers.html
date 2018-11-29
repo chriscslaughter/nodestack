@@ -1,0 +1,8 @@
+{% load static %}
+<link rel="stylesheet" type="text/css"  href="{% static 'admin/css/base.css' %}">
+<a href="/transfers/new">new</a><br>
+{% for transfer in transfers %}
+{{ transfer.user_id }}
+{% empty %}
+no transfers
+{% endfor %}
