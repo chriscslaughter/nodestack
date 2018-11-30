@@ -24,17 +24,17 @@ class TransferRequestSignatureInline(admin.TabularInline):
         }
 
 class TransferRequestAdmin(admin.ModelAdmin):
-    #form = TransferRequestForm
+    form = TransferRequestForm
+    change_form_template = 'coldstoragetransfers/admin/transferrequests/foo.html'
     inlines = [
         TransferRequestSignatureInline
     ]
-    model = TransferRequest
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
             return ('ip_address', 'user_agent')
 
-    return super().get_readonly_fields(request, obj)
+        return super().get_readonly_fields(request, obj)
 
     def get_exclude(self, request, obj=None):
         if not obj:

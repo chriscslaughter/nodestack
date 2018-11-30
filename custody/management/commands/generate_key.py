@@ -19,5 +19,4 @@ class Command(BaseCommand):
             address = key.address
         print("Generated {} key:".format(options['coin']))
         print("     priv: " + str(priv))
-        print("  address: " + str(address))
         print("      pub: " + str(key.public_key.hex()))

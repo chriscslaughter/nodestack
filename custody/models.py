@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 from smart_selects.db_fields import ChainedManyToManyField
 
@@ -39,7 +40,7 @@ class Node(models.Model):
 class UserAddress(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='addresses', on_delete=models.CASCADE)
     currency = models.ForeignKey(Currency, related_name='user_addresses', on_delete=models.CASCADE)
-    address = models.CharField(max_length=256, help_text="This is the public address associated with your key. Do NOT input your private key here under any circumstance!")
+    address = models.CharField(max_length=256, help_text="This is the public key. Do NOT input your private key here under any circumstance!")
     created_at = models.DateTimeField(auto_now_add=True)
     class Meta:
         unique_together = (
@@ -53,6 +54,7 @@ class MultiSigAddress(models.Model):
     currency = models.OneToOneField(Currency, related_name='cold_storage_address', on_delete=models.CASCADE)
     address = models.CharField(max_length=256, null=True, blank=True)
     user_addresses = models.ManyToManyField(UserAddress)
+    minimum_signatures = models.PositiveIntegerField()
 
     def __str__(self):
         return f"{self.currency}_{self.address}"

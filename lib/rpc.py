@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 class RPCException(Exception):
     pass
 
@@ -27,4 +31,5 @@ class RPC(object):
         if response['error'] == None:
             return response['result']
         else:
+            logging.error('RPC returned error: %s' % str(response))
             raise RPCException(response['error'])

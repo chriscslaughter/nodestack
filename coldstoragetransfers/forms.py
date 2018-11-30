@@ -10,3 +10,5 @@ class TransferRequestSignatureForm(forms.ModelForm):
     class Meta:
         model = TransferRequestSignature
         fields = ('transaction_body',)
+
+
