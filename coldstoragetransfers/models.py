@@ -8,6 +8,7 @@ class TransferRequest(models.Model):
     user_agent = models.CharField(max_length=200)
     ip_address = models.CharField(max_length=50)
     raw_transaction_body = models.CharField(max_length=1000)
+    txid = models.CharField(max_length=512, null=True, blank=True)
     amount = models.DecimalField(max_digits=32, decimal_places=8)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -25,4 +26,4 @@ class TransferRequestSignature(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.user.username
+        return self.user.username + '_' + str(self.created_at)

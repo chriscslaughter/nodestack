@@ -28,12 +28,13 @@ class BTCHelper:
 
     def create_raw_transaction(self, amount, address):
         fee = self.generate_fee()
-        print('fee: ' + str(fee))
+        logger.debug('fee: ' + str(fee))
         full_amount = Decimal(Decimal(amount).quantize(DEFAULT_ZERO) + fee).quantize(DEFAULT_ZERO)
-        print('full amount: ' + str(full_amount))
+        logger.debug('full amount: ' + str(full_amount))
 
 
-        balance = self.rpc.make_call('getreceivedbyaddress', [address, self.required_confirmations])
+        unspents = self.rpc.make_call('listunspent', [self.required_confirmations, 999999, [address]])
+        balance = sum([Decimal(unspent['amount']).quantize(DEFAULT_ZERO) for unspent in unspents])
         if balance < full_amount:
             raise ValueError('the cold storage balance is less than the withdrawal amount')
 
@@ -49,17 +50,21 @@ class BTCHelper:
                 break
 
         total = Decimal(total).quantize(DEFAULT_ZERO)
-        print('total: ' + str(total))
+        logger.debug('total: ' + str(total))
 
         outputs = {
             self.get_hot_wallet_address(): float(amount),
             address: float(Decimal(total - full_amount).quantize(DEFAULT_ZERO))
         }
 
-        print('raw inputs: ' + str(raw_inputs))
-        print('outputs: ' + str(outputs))
+        logger.debug('raw inputs: ' + str(raw_inputs))
+        logger.debug('outputs: ' + str(outputs))
         result = self.rpc.make_call('createrawtransaction', [raw_inputs, outputs])
         return result
 
     def generate_fee(self):
         return Decimal(0.001).quantize(DEFAULT_ZERO)
+
+    def send_raw_transaction(self, transaction):
+        txid = self.rpc.make_call('sendrawtransaction', [transaction])
+        return txid
