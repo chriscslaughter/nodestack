@@ -18,5 +18,5 @@ class BTCHelper:
         address = self.rpc.make_call('addmultisigaddress', [sigs_required, public_keys])['address']
         return address
 
-    def create_raw_transaction(self):
+    def create_raw_transaction_for_amount(self):
         pass
