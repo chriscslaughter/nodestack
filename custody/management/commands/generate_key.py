@@ -9,14 +9,19 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--coin', type=str)
+        parser.add_argument('-test', action='store_true')
 
     def handle(self, *args, **options):
         priv = None
         address = None
         if options['coin'] == "BTC":
-            key = bit.Key()
-            priv = key.to_hex()
+            if options['test']:
+                key = bit.PrivateKeyTestnet()
+            else:
+                key = bit.PrivateKey()
+            priv = key.to_wif()
             address = key.address
-        print("Generated {} key:".format(options['coin']))
-        print("     priv: " + str(priv))
+        label = 'LIVE' if not options['test'] else 'TEST'
+        print("Generated {} {} key:".format(label, options['coin']))
+        print("     priv(wif format): " + str(priv))
         print("      pub: " + str(key.public_key.hex()))

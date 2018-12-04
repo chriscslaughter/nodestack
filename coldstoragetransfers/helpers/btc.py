@@ -19,7 +19,8 @@ class BTCHelper:
     def add_multisig_address(self, sigs_required, public_keys):
         if sigs_required > len(public_keys):
             raise ValueError("you're asking for more signatures than signatories")
-        address = self.rpc.make_call('addmultisigaddress', [sigs_required, public_keys])['address']
+        address = self.rpc.make_call('createmultisig', [sigs_required, public_keys])['address']
+        self.rpc.make_call('importaddress', [address])
         return address
 
     def get_hot_wallet_address(self):
@@ -42,7 +43,8 @@ class BTCHelper:
         raw_inputs = []
         for unspent in unspents:
             total += Decimal(unspent['amount']).quantize(DEFAULT_ZERO)
-            raw_inputs.append(unspent)
+            basic_input = {'txid': unspent['txid'], 'vout': unspent['vout']}
+            raw_inputs.append(basic_input)
             if total >= full_amount:
                 break
 
@@ -54,6 +56,8 @@ class BTCHelper:
             address: float(Decimal(total - full_amount).quantize(DEFAULT_ZERO))
         }
 
+        print('raw inputs: ' + str(raw_inputs))
+        print('outputs: ' + str(outputs))
         result = self.rpc.make_call('createrawtransaction', [raw_inputs, outputs])
         return result
 
