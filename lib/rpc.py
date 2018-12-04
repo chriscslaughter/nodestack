@@ -11,7 +11,7 @@ class RPC(object):
         self.username = username
         self.password = password
 
-    def make_call(self, method, params=[]):
+    def make_call(self, method, params=[], encoder=None):
         import requests, json
         url = "http://{username}:{password}@{address}/".format(
             username=self.username, 
@@ -26,7 +26,7 @@ class RPC(object):
             "params": params,
             "jsonrpc": "1.0"
         }
-        response = requests.post(url, data=json.dumps(data), headers=headers)
+        response = requests.post(url, data=json.dumps(data, cls=encoder), headers=headers)
         response = response.json()
         if response['error'] == None:
             return response['result']

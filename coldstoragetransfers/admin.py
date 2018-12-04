@@ -26,9 +26,16 @@ class TransferRequestSignatureInline(admin.TabularInline):
 class TransferRequestAdmin(admin.ModelAdmin):
     form = TransferRequestForm
     change_form_template = 'coldstoragetransfers/admin/transferrequests/change_form.html'
+    list_display = ('__str__', 'id', 'created_at')
     inlines = [
         TransferRequestSignatureInline
     ]
+
+    def get_fields(self, request, obj):
+        fields = self.form.Meta.fields
+        if obj:
+            fields += ('raw_transaction_body',)
+        return fields
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
@@ -53,7 +60,6 @@ class TransferRequestAdmin(admin.ModelAdmin):
         obj.user = request.user
         obj.user_agent = request.META['HTTP_USER_AGENT']
         obj.ip_address = get_client_ip(request)
-        #obj.raw_transaction_body = BTCHelper().add_multisig_address(self.cleaned_data['minimum_signatures'], raw_public_keys)
         obj.save()
 
 admin.site.register(TransferRequest, TransferRequestAdmin)
