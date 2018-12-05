@@ -31,7 +31,6 @@ class BTCCustody(BaseCoin):
         fee_rate = self.rpc.make_call("estimatesmartfee", [self.cur.required_confirmations])["feerate"] * 240 / 1024
         status_info = {
             'blocks': blockchaininfo['blocks'],
-            'confirmations': self.cur.required_confirmations,
             'latest_block_time': latest_time,
             'latest_block_age': (utc_now() - datetime_from_utc_timestamp(latest_time)).total_seconds(),
             'fee_rate': fee_rate

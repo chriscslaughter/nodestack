@@ -24,11 +24,7 @@ class ETHCustody(BaseCoin):
             'blocks': self._determine_final_block(),
             'latest_block_time': block.timestamp,
             'latest_block_age': (utc_now() - datetime.datetime.fromtimestamp(block.timestamp, datetime.timezone.utc)),
-            'fee_rate': self._to_eth(self.w3.eth.gasPrice),
-            'cold_storage': {
-                'quantity': cold_storage_quantity,
-                'value': '${:,.2f}'.format(cold_storage_quantity * self.cur.price()),
-            }
+            'fee_rate': self._to_eth(self.w3.eth.gasPrice)
         }
         return Response(status_info, status=status.HTTP_200_OK)
 
