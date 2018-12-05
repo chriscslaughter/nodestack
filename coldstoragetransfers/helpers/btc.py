@@ -66,8 +66,5 @@ class BTCHelper:
         return Decimal(0.001).quantize(DEFAULT_ZERO)
 
     def send_raw_transaction(self, transaction):
-        print("sending raw transaction")
-        print(transaction)
         txid = self.rpc.make_call('sendrawtransaction', [transaction])
-        print("got: " + str(txid))
         return txid

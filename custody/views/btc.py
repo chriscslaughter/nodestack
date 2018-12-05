@@ -22,6 +22,7 @@ class BTCCustody(BaseCoin):
             REQUIRED_CONFIRMATIONS[self.cur.symbol] = required_confirmations
             self.cur.required_confirmations = int(required_confirmations)
             self.cur.save()
+
         # general status
         blockchaininfo = self.rpc.make_call("getblockchaininfo", [])
         latest_hash = self.rpc.make_call("getblockhash", [blockchaininfo["blocks"]])
@@ -30,7 +31,7 @@ class BTCCustody(BaseCoin):
         fee_rate = self.rpc.make_call("estimatesmartfee", [self.cur.required_confirmations])["feerate"] * 240 / 1024
         status_info = {
             'blocks': blockchaininfo['blocks'],
-            'required_confirmations': self.cur.required_confirmations,
+            'confirmations': self.cur.required_confirmations,
             'latest_block_time': latest_time,
             'latest_block_age': (utc_now() - datetime_from_utc_timestamp(latest_time)).total_seconds(),
             'fee_rate': fee_rate
