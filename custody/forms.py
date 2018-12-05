@@ -10,7 +10,7 @@ from coldstoragetransfers.helpers.btc import BTCHelper
 class MultiSigAddressForm(forms.ModelForm):
     class Meta:
         model = MultiSigAddress
-        exclude = ['address']
+        exclude = ['address', 'redeem_script']
 
     def clean(self):
         #{'currency': <Currency: ETH>, 'user_addresses': <QuerySet [<UserAddress: BTC_tipu>, <UserAddress: ETH_tipu>]>, 'minimum_signatures': 2}
@@ -42,4 +42,6 @@ class MultiSigAddressForm(forms.ModelForm):
 
         #should only happen once !
         if not self.instance.pk:
-            self.instance.address = BTCHelper().add_multisig_address(self.cleaned_data['minimum_signatures'], raw_public_keys)
+            create_payload = BTCHelper().add_multisig_address(self.cleaned_data['minimum_signatures'], raw_public_keys)
+            self.instance.address = create_payload['address']
+            self.instance.redeem_script = create_payload['redeemScript']

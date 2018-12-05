@@ -55,6 +55,7 @@ class MultiSigAddress(models.Model):
     address = models.CharField(max_length=256, null=True, blank=True)
     user_addresses = models.ManyToManyField(UserAddress)
     minimum_signatures = models.PositiveIntegerField()
+    redeem_script = models.CharField(max_length=1000)
 
     def __str__(self):
         return f"{self.currency}_{self.address}"

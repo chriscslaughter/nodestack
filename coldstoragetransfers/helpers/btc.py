@@ -19,9 +19,9 @@ class BTCHelper:
     def add_multisig_address(self, sigs_required, public_keys):
         if sigs_required > len(public_keys):
             raise ValueError("you're asking for more signatures than signatories")
-        address = self.rpc.make_call('createmultisig', [sigs_required, public_keys])['address']
-        self.rpc.make_call('importaddress', [address])
-        return address
+        create_payload = self.rpc.make_call('createmultisig', [sigs_required, public_keys])
+        self.rpc.make_call('importaddress', [create_payload['address']])
+        return create_payload
 
     def get_hot_wallet_address(self):
         return self.rpc.make_call('getnewaddress')
@@ -66,5 +66,8 @@ class BTCHelper:
         return Decimal(0.001).quantize(DEFAULT_ZERO)
 
     def send_raw_transaction(self, transaction):
+        print("sending raw transaction")
+        print(transaction)
         txid = self.rpc.make_call('sendrawtransaction', [transaction])
+        print("got: " + str(txid))
         return txid

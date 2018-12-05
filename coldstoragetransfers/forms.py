@@ -10,7 +10,6 @@ class TransferRequestForm(forms.ModelForm):
         model = TransferRequest
         fields = ('multisig_address', 'amount')
 
-
     def clean(self):
         btc = BTCHelper()
         if not self.instance.pk:
@@ -19,14 +18,18 @@ class TransferRequestForm(forms.ModelForm):
             except ValueError as e:
                 raise ValidationError({'amount': _('The cold storage balance is less than the withdrawal amount.')})
 
-        if self.instance.pk and \
-           self.instance.multisig_address.minimum_signatures == self.instance.signatures.count():
-            signature = self.instance.signatures.order_by('-created_at').first()
-            self.instance.txid = btc.send_raw_transaction(signature.transaction_body)
-
 class TransferRequestSignatureForm(forms.ModelForm):
     class Meta:
         model = TransferRequestSignature
         fields = ('transaction_body',)
 
-
+    # def clean(self):
+    #     transfer_request = self.cleaned_data['transfer_request']
+    #     print('COUNT')
+    #     print(transfer_request.signatures.count())
+    #     print('PK')
+    #     print(self.instance.pk)
+    #     btc = BTCHelper()
+    #     if transfer_request.multisig_address.minimum_signatures == transfer_request.signatures.count() + 1 and not transfer_request.txid and not self.instance.pk:
+    #         transfer_request.txid = btc.send_raw_transaction(self.cleaned_data['transaction_body'])
+    #         transfer_request.save()

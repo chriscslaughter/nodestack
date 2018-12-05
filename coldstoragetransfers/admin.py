@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 from coldstoragetransfers.models import TransferRequest, TransferRequestSignature
-from coldstoragetransfers.forms import TransferRequestForm
+from coldstoragetransfers.forms import TransferRequestForm, TransferRequestSignatureForm
 
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -16,12 +16,19 @@ def get_client_ip(request):
 
 class TransferRequestSignatureInline(admin.TabularInline):
     model = TransferRequestSignature
+    form = TransferRequestSignatureForm
+    ordering = ('-created_at',)
 
-    def get_changeform_initial_data(self, request):
-        return {
-            'user_agent': request.META['HTTP_USER_AGENT'],
-            'ip_address': get_client_ip(request)
-        }
+    def get_fields(self, request, obj):
+        fields = self.form.Meta.fields
+        if obj:
+            fields += ('user', 'ip_address', 'user_agent')
+        return fields
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return ('user', 'ip_address', 'user_agent', 'created_at')
+        return super().get_readonly_fields(request, obj)
 
 class TransferRequestAdmin(admin.ModelAdmin):
     form = TransferRequestForm
@@ -31,15 +38,34 @@ class TransferRequestAdmin(admin.ModelAdmin):
         TransferRequestSignatureInline
     ]
 
+    def save_formset(self, request, form, formset, change):
+        print(change)
+        instances = formset.save(commit=False)
+        if not instances:
+            return
+        for instance in instances:
+            instance.user = request.user
+            instance.user_agent = request.META['HTTP_USER_AGENT']
+            instance.ip_address = get_client_ip(request)
+
+        print(instance.transfer_request)
+
+        super().save_formset(request, form, formset, change)
+
+        print(type(instances), len(instances))
+
+    def redeem_script(self, obj):
+        return obj.multisig_address.redeem_script
+
     def get_fields(self, request, obj):
         fields = self.form.Meta.fields
         if obj:
-            fields += ('raw_transaction_body',)
+            fields += ('user', 'raw_transaction_body','ip_address', 'user_agent', 'redeem_script')
         return fields
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ('ip_address', 'user_agent')
+            return ('user', 'ip_address', 'user_agent', 'raw_transaction_body', 'redeem_script')
 
         return super().get_readonly_fields(request, obj)
 
