@@ -3,7 +3,6 @@
 
 {% block extrahead %}{{ block.super }}
 <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
-<script type="text/javascript" src="{% static 'js/bitcoinjs.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/bitcoin_signer.js' %}"></script>
 {{ media }}
 {% endblock %}
@@ -81,7 +80,7 @@
 Private Key: <textarea id="private_key"></textarea><br>
 Transaction: <textarea id="transaction_current"></textarea><br>
 Result: <textarea id="transaction_result"></textarea><br>
-<input type="button" value="sign" onclick="doSigning()">
+<input type="button" value="sign" onclick="bitsea.doSigning()">
 </div>
 </form></div>
 {% endblock %}
