@@ -63,6 +63,7 @@ class BTCHelper:
         return result
 
     def generate_fee(self):
+        # https://gist.github.com/dabura667/1bb77d63d38bfd99a0ce453db74e0115
         return Decimal(0.001).quantize(DEFAULT_ZERO)
 
     def send_raw_transaction(self, transaction):
