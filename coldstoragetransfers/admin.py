@@ -4,6 +4,7 @@ from django.utils.safestring import mark_safe
 
 from coldstoragetransfers.models import TransferRequest, TransferRequestSignature
 from coldstoragetransfers.forms import TransferRequestForm, TransferRequestSignatureForm
+from coldstoragetransfers.helpers.btc import BTCHelper
 
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -39,20 +40,24 @@ class TransferRequestAdmin(admin.ModelAdmin):
     ]
 
     def save_formset(self, request, form, formset, change):
-        print(change)
         instances = formset.save(commit=False)
         if not instances:
             return
-        for instance in instances:
-            instance.user = request.user
-            instance.user_agent = request.META['HTTP_USER_AGENT']
-            instance.ip_address = get_client_ip(request)
+        if len(instances) > 1:
+            raise ValueError('should only add one at a time')
 
-        print(instance.transfer_request)
+        instance = instances[0]
+        instance.user = request.user
+        instance.user_agent = request.META['HTTP_USER_AGENT']
+        instance.ip_address = get_client_ip(request)
+
+        transfer_request = instances[0].transfer_request
+        if transfer_request.signatures.count() + 1 >= transfer_request.multisig_address.minimum_signatures and not transfer_request.txid:
+            btc = BTCHelper()
+            transfer_request.txid = btc.send_raw_transaction(instance.transaction_body)
+            transfer_request.save()
 
         super().save_formset(request, form, formset, change)
-
-        print(type(instances), len(instances))
 
     def redeem_script(self, obj):
         return obj.multisig_address.redeem_script
