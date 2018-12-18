@@ -77,10 +77,9 @@
 {# JavaScript for prepopulated fields #}
 {% prepopulated_fields_js %}
 
-Private Key: <textarea id="private_key"></textarea><br>
-Transaction: <textarea id="transaction_current"></textarea><br>
-Result: <textarea id="transaction_result"></textarea><br>
-<input type="button" value="sign" onclick="bitsea.doSigning()">
+<textarea id="private_key"></textarea><br>
+Private Key (you generated this at one point, it should be saved on your computer)<br><br>
+<input type="button" value="sign" onclick="bitsea.doSigning()"><br>
 </div>
 </form></div>
 {% endblock %}

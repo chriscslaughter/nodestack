@@ -33,8 +33,8 @@ class BTCHelper:
         logger.debug('full amount: ' + str(full_amount))
 
 
-        unspents = self.rpc.make_call('listunspent', [self.required_confirmations, 999999, [address]])
-        balance = sum([Decimal(unspent['amount']).quantize(DEFAULT_ZERO) for unspent in unspents])
+
+        balance = self.get_balance(address)
         if balance < full_amount:
             raise ValueError('the cold storage balance is less than the withdrawal amount')
 
@@ -61,6 +61,11 @@ class BTCHelper:
         logger.debug('outputs: ' + str(outputs))
         result = self.rpc.make_call('createrawtransaction', [raw_inputs, outputs])
         return result
+
+    def get_balance(self, address):
+        unspents = self.rpc.make_call('listunspent', [self.required_confirmations, 999999, [address]])
+        balance = sum([Decimal(unspent['amount']).quantize(DEFAULT_ZERO) for unspent in unspents])
+        return balance
 
     def generate_fee(self):
         # https://gist.github.com/dabura667/1bb77d63d38bfd99a0ce453db74e0115

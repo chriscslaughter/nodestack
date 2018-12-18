@@ -5,13 +5,29 @@ const Buffer = require('buffer').Buffer;
 function doSigning() {
 	let privateKey = django.jQuery('#private_key').val();
 	var keyPair = bitcoin.ECPair.fromWIF(privateKey, bitcoin.networks.testnet)
-	t = bitcoin.Transaction.fromHex(django.jQuery('#transaction_current').val())
+
+	var rawTransaction = django.jQuery('#signatures-0 input[type=text]').val();
+	if(rawTransaction == "") {
+	    rawTransaction = django.jQuery('.field-raw_transaction_body div div').text();
+	}
+	console.log('raw transaction is: ' + rawTransaction);
+	t = bitcoin.Transaction.fromHex(rawTransaction)
 	tb = bitcoin.TransactionBuilder.fromTransaction(t, bitcoin.networks.testnet);
-	redeemScript = Buffer(django.jQuery('.field-redeem_script .readonly')[0].innerHTML, 'hex')
+	redeemScriptRaw = django.jQuery('.field-redeem_script .readonly')[0].innerHTML;
+	console.log('redeem script is: ' + redeemScriptRaw);
+	redeemScript = Buffer(redeemScriptRaw, 'hex')
 	for(var i =0; i < t.ins.length; i++) {
 		tb.sign(i, keyPair, redeemScript);
 	}
-	django.jQuery('#transaction_result').val(tb.build().toHex());
+	fullRawTransaction = tb.build().toHex()
+	django.jQuery('#transaction_result').val(fullRawTransaction);
+	var count = 0;
+	while(django.jQuery('#signatures-' + count + ' input[type=text]').val() != "") {
+		count++;
+		console.log(count);
+	}
+	django.jQuery('#signatures-' + count + ' input[type=text]').val(fullRawTransaction)
+	console.log('full raw transaction: ' + fullRawTransaction);
 }
 
 exports.doSigning = doSigning;

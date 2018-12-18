@@ -23,7 +23,7 @@ class TransferRequestSignatureInline(admin.TabularInline):
     def get_fields(self, request, obj):
         fields = self.form.Meta.fields
         if obj:
-            fields += ('user', 'ip_address', 'user_agent')
+            fields += ('user', 'ip_address', 'user_agent', 'created_at')
         return fields
 
     def get_readonly_fields(self, request, obj=None):
@@ -41,6 +41,8 @@ class TransferRequestAdmin(admin.ModelAdmin):
 
     def save_formset(self, request, form, formset, change):
         instances = formset.save(commit=False)
+        for obj in formset.deleted_objects:
+            obj.delete()
         if not instances:
             return
         if len(instances) > 1:
@@ -57,20 +59,24 @@ class TransferRequestAdmin(admin.ModelAdmin):
             transfer_request.txid = btc.send_raw_transaction(instance.transaction_body)
             transfer_request.save()
 
-        super().save_formset(request, form, formset, change)
+        return super().save_formset(request, form, formset, change)
 
     def redeem_script(self, obj):
         return obj.multisig_address.redeem_script
 
+    def current_balance(self, obj):
+        btc = BTCHelper()
+        return btc.get_balance(obj.multisig_address.address)
+
     def get_fields(self, request, obj):
         fields = self.form.Meta.fields
         if obj:
-            fields += ('user', 'raw_transaction_body','ip_address', 'user_agent', 'redeem_script')
+            fields += ('user', 'raw_transaction_body','ip_address', 'user_agent', 'redeem_script', 'current_balance', 'txid')
         return fields
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ('user', 'ip_address', 'user_agent', 'raw_transaction_body', 'redeem_script')
+            return ('user', 'ip_address', 'user_agent', 'raw_transaction_body', 'redeem_script', 'current_balance', 'txid')
 
         return super().get_readonly_fields(request, obj)
 
