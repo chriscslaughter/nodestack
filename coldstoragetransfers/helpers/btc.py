@@ -20,7 +20,7 @@ class BTCHelper:
         if sigs_required > len(public_keys):
             raise ValueError("you're asking for more signatures than signatories")
         create_payload = self.rpc.make_call('createmultisig', [sigs_required, public_keys])
-        self.rpc.make_call('importaddress', [create_payload['address']])
+        self.rpc.make_call('importaddress', [create_payload['address'], "", False])
         return create_payload
 
     def get_hot_wallet_address(self):
