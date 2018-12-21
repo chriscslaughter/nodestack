@@ -40,6 +40,9 @@ class TransferRequestAdmin(admin.ModelAdmin):
         TransferRequestSignatureInline
     ]
 
+    def get_inline_instances(self, request, obj=None):
+        return obj and super().get_inline_instances(request, obj) or []
+
     def save_formset(self, request, form, formset, change):
         instances = formset.save(commit=False)
         for obj in formset.deleted_objects:
