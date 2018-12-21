@@ -24,6 +24,10 @@ class UserAddressAdmin(admin.ModelAdmin):
     model = UserAddress
     list_display = ('currency', 'public_key')
 
+    def get_form(self, request, obj=None, **kwargs):
+        self.exclude = ['user']
+        return super().get_form(request, obj, **kwargs)
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.filter(user=request.user)
