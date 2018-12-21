@@ -19,6 +19,7 @@ class TransferRequestSignatureInline(admin.TabularInline):
     model = TransferRequestSignature
     form = TransferRequestSignatureForm
     ordering = ('-created_at',)
+    extra = 1
 
     def get_fields(self, request, obj):
         fields = self.form.Meta.fields

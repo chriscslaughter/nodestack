@@ -22,7 +22,7 @@ class MultiSigAddressAdmin(admin.ModelAdmin):
 
 class UserAddressAdmin(admin.ModelAdmin):
     model = UserAddress
-    list_display = ('currency', 'address')
+    list_display = ('currency', 'public_key')
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
