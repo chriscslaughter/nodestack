@@ -7,7 +7,9 @@ from smart_selects.db_fields import ChainedManyToManyField
 CURRENCY_CHOICES = (
     ('BTC', 'Bitcoin'),
     ('LTC', 'Litecoin'),
-    ('BCH', 'Bitcoin Cash')
+    ('BCH', 'Bitcoin Cash'),
+    ('ETC', 'Ethereum Classic'),
+    ('ETH', 'Ethereum')
 )
 CURRENCY_prices = {}
 class Currency(models.Model):
