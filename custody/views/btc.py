@@ -17,12 +17,6 @@ class BTCCustody(BaseCoin):
         self.rpc = RPC(self.cur.node.ip_address, self.cur.node.user, self.cur.node.password)
 
     def get_status(self, request):
-        required_confirmations = request.GET['required_confirmations']
-        if REQUIRED_CONFIRMATIONS.get(self.cur.symbol) != required_confirmations:
-            REQUIRED_CONFIRMATIONS[self.cur.symbol] = required_confirmations
-            self.cur.required_confirmations = int(required_confirmations)
-            self.cur.save()
-
         # general status
         blockchaininfo = self.rpc.make_call("getblockchaininfo", [])
         latest_hash = self.rpc.make_call("getblockhash", [blockchaininfo["blocks"]])
@@ -33,10 +27,11 @@ class BTCCustody(BaseCoin):
             'blocks': blockchaininfo['blocks'],
             'latest_block_time': latest_time,
             'latest_block_age': (utc_now() - datetime_from_utc_timestamp(latest_time)).total_seconds(),
-            'fee_rate': fee_rate
+            'fee_rate': fee_rate,
+            'required_confirmations': self.cur.required_confirmations
         }
-        # balance
 
+        # balance
         balance = {}
         balance["hot_wallet"], balance["cold_storage"] = {}, {}
 

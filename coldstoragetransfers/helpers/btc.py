@@ -35,6 +35,7 @@ class BTCHelper:
 
 
         balance = self.get_balance(address)
+        logger.debug('balance: ' + str(balance))
         if balance < full_amount:
             raise ValueError('the cold storage balance is less than the withdrawal amount')
 

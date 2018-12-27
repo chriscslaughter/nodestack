@@ -28,6 +28,7 @@ function doSigning() {
 	}
 	django.jQuery('#signatures-' + count + ' input[type=text]').val(fullRawTransaction)
 	console.log('full raw transaction: ' + fullRawTransaction);
+	django.jQuery('[name=_continue]')[0].click()
 }
 
 exports.doSigning = doSigning;

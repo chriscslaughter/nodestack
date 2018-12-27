@@ -22,7 +22,7 @@ class TransferRequestSignature(models.Model):
     transfer_request = models.ForeignKey(TransferRequest, related_name='signatures', on_delete=models.DO_NOTHING)
     user_agent = models.CharField(max_length=200)
     ip_address = models.CharField(max_length=50)
-    transaction_body = models.CharField(max_length=2000)
+    transaction_body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

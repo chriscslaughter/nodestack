@@ -24,7 +24,8 @@ class ETHCustody(BaseCoin):
             'blocks': self._determine_final_block(),
             'latest_block_time': block.timestamp,
             'latest_block_age': (utc_now() - datetime.datetime.fromtimestamp(block.timestamp, datetime.timezone.utc)),
-            'fee_rate': self._to_eth(self.w3.eth.gasPrice)
+            'fee_rate': self._to_eth(self.w3.eth.gasPrice),
+            'required_confirmations': self.cur.required_confirmations
         }
         return Response(status_info, status=status.HTTP_200_OK)
 
@@ -75,7 +76,7 @@ class ETHCustody(BaseCoin):
                 })
             starting_block += 1
             block = self.w3.eth.getBlock(starting_block)
-        
+
         result = {
             "lastblock": final_block,
             "transactions": transactions

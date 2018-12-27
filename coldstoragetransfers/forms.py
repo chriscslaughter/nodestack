@@ -19,6 +19,7 @@ class TransferRequestForm(forms.ModelForm):
                 raise ValidationError({'amount': _('The cold storage balance is less than the withdrawal amount.')})
 
 class TransferRequestSignatureForm(forms.ModelForm):
+    transaction_body = forms.CharField()
     class Meta:
         model = TransferRequestSignature
         fields = ('transaction_body',)
