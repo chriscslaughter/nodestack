@@ -18,7 +18,7 @@ This isn't a hard limit. Before processing a new block, if the transaction
 count exceeds the limit, we stop processing new blocks.
 """
 
-SCANNED_LIMIT = 1000
+SCANNED_LIMIT = 2000
 
 class ETHCustody(BaseCoin):
     def __init__(self):
@@ -54,6 +54,7 @@ class ETHCustody(BaseCoin):
         if not block_counter:
             Response({"message": "`block` must be provided"},
                      status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        block_counter = int(block_counter)
 
         final_block = int(request.GET.get('final' ,self._determine_final_block()))
         block = self.w3.eth.getBlock(block_counter)
