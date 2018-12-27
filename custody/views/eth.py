@@ -18,7 +18,7 @@ This isn't a hard limit. Before processing a new block, if the transaction
 count exceeds the limit, we stop processing new blocks.
 """
 
-TRANSACTION_LIMIT = 200
+SCANNED_LIMIT = 1000
 
 class ETHCustody(BaseCoin):
     def __init__(self):
@@ -50,20 +50,21 @@ class ETHCustody(BaseCoin):
         return Response(address_info, status=status.HTTP_201_CREATED)
 
     def list_transactions(self, request):
-        block = request.GET.get('block')
-        if not block:
+        block_counter = request.GET.get('block')
+        if not block_counter:
             Response({"message": "`block` must be provided"},
                      status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-        starting_block = int(request.GET.get('block', 0))
-        final_block = int(request.GET.get('final' ,0)) or self._determine_final_block()
-        block = self.w3.eth.getBlock(starting_block)
+        final_block = int(request.GET.get('final' ,self._determine_final_block()))
+        block = self.w3.eth.getBlock(block_counter)
         transactions = []
-        while(block and starting_block <= final_block):
-            if len(transactions) > TRANSACTION_LIMIT:
-                final_block = starting_block
+        scanned = 0
+        while(block and block_counter <= final_block):
+            if scanned > SCANNED_LIMIT:
+                final_block = block_counter
                 break
             for transaction in block['transactions']:
+                scanned += 1
                 transaction_details = self.w3.eth.getTransaction(transaction)
                 is_deposit = (
                     transaction_details.to and
@@ -89,8 +90,8 @@ class ETHCustody(BaseCoin):
                     'time_received': block.timestamp,
                     'action': action
                 })
-            starting_block += 1
-            block = self.w3.eth.getBlock(starting_block)
+            block_counter += 1
+            block = self.w3.eth.getBlock(block_counter)
 
         result = {
             "lastblock": final_block,
