@@ -1,4 +1,6 @@
 import datetime
+import logging
+
 from rest_framework import status
 from rest_framework.response import Response
 from web3 import HTTPProvider, Web3
@@ -7,6 +9,16 @@ from custody.views import BaseCoin
 from custody.models import Currency
 from lib.timetools import utc_now, datetime_from_utc_timestamp
 from lib import to_decimal
+
+logger = logging.getLogger(__name__)
+
+
+"""
+This isn't a hard limit. Before processing a new block, if the transaction
+count exceeds the limit, we stop processing new blocks.
+"""
+
+TRANSACTION_LIMIT = 200
 
 class ETHCustody(BaseCoin):
     def __init__(self):
@@ -48,6 +60,9 @@ class ETHCustody(BaseCoin):
         block = self.w3.eth.getBlock(starting_block)
         transactions = []
         while(block and starting_block <= final_block):
+            if len(transactions) > TRANSACTION_LIMIT:
+                final_block = starting_block
+                break
             for transaction in block['transactions']:
                 transaction_details = self.w3.eth.getTransaction(transaction)
                 is_deposit = (
