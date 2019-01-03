@@ -27,18 +27,6 @@ class BTCHelper:
         return self.rpc.make_call('getnewaddress')
 
     def create_raw_transaction(self, amount, address):
-        fee = self.generate_fee()
-        logger.debug('fee: ' + str(fee))
-        full_amount = Decimal(Decimal(amount).quantize(DEFAULT_ZERO) + fee).quantize(DEFAULT_ZERO)
-        logger.debug('full amount: ' + str(full_amount))
-
-
-
-        balance = self.get_balance(address)
-        logger.debug('balance: ' + str(balance))
-        if balance < full_amount:
-            raise ValueError('the cold storage balance is less than the withdrawal amount')
-
         unspents = self.rpc.make_call('listunspent', [self.required_confirmations, 999999, [address]])
 
         total = DEFAULT_ZERO
@@ -47,8 +35,19 @@ class BTCHelper:
             total += Decimal(unspent['amount']).quantize(DEFAULT_ZERO)
             basic_input = {'txid': unspent['txid'], 'vout': unspent['vout']}
             raw_inputs.append(basic_input)
-            if total >= full_amount:
+            if total >= amount:
                 break
+
+        fee = self.generate_fee(len(raw_inputs))
+        logger.debug('fee: ' + str(fee))
+        full_amount = Decimal(Decimal(amount).quantize(DEFAULT_ZERO) + fee).quantize(DEFAULT_ZERO)
+        logger.debug('full amount: ' + str(full_amount))
+
+        balance = self.get_balance(address)
+        logger.debug('balance: ' + str(balance))
+        if balance < full_amount:
+            raise ValueError('the cold storage balance is less than the withdrawal amount')
+
 
         total = Decimal(total).quantize(DEFAULT_ZERO)
         logger.debug('total: ' + str(total))
@@ -68,9 +67,24 @@ class BTCHelper:
         balance = sum([Decimal(unspent['amount']).quantize(DEFAULT_ZERO) for unspent in unspents])
         return balance
 
-    def generate_fee(self):
+    def generate_fee(self, input_count):
         # https://gist.github.com/dabura667/1bb77d63d38bfd99a0ce453db74e0115
-        return Decimal(0.0001).quantize(DEFAULT_ZERO)
+        """
+        generated equation y = 303.9836x + 23.92763 using linear regression with
+        inputs:
+        tx inputs       byte size
+        1               270
+        2               664
+        3               960
+        4               1252
+        5               1552
+        6               1848
+        9               2741
+        """
+        result = Decimal(303.9836 * input_count + 23.92763).quantize(DEFAULT_ZERO)
+        if input_count < 9:
+            result += result * .05
+        return result
 
     def send_raw_transaction(self, transaction):
         txid = self.rpc.make_call('sendrawtransaction', [transaction])
