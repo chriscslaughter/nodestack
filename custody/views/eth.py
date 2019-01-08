@@ -85,7 +85,7 @@ class ETHCustody(BaseCoin):
                     continue
                 transactions.append({
                     'address': transaction_details.to,
-                    'amount': transaction_details.value,
+                    'amount': self.w3.fromWei(transaction_details.value, 'ether'),
                     'confirmations': self._determine_final_block() - transaction_details.blockNumber,
                     'txid': transaction.hex().lower(),
                     'time_received': block.timestamp,
