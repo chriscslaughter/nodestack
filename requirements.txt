@@ -62,7 +62,6 @@ python-bitcoinrpc==0.1
 python-jsonrpc-server==0.0.2
 python-language-server==0.21.2
 pytz==2018.5
-redis==3.0.1
 requests==2.20.1
 rlp==1.0.3
 rope==0.11.0
