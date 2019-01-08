@@ -18,8 +18,6 @@ This isn't a hard limit. Before processing a new block, if the transaction
 count exceeds the limit, we stop processing new blocks.
 """
 
-SCANNED_LIMIT = 2000
-
 class ETHCustody(BaseCoin):
     def __init__(self):
         self.cur = Currency.objects.get(symbol='ETH')
@@ -59,13 +57,8 @@ class ETHCustody(BaseCoin):
         final_block = int(request.GET.get('final' ,self._determine_final_block()))
         block = self.w3.eth.getBlock(block_counter)
         transactions = []
-        scanned = 0
         while(block and block_counter <= final_block):
-            if scanned > SCANNED_LIMIT:
-                final_block = block_counter
-                break
             for transaction in block['transactions']:
-                scanned += 1
                 transaction_details = self.w3.eth.getTransaction(transaction)
                 is_deposit = (
                     transaction_details.to and
