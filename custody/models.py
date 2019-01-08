@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.contrib.postgres.fields import JSONField
 
 from smart_selects.db_fields import ChainedManyToManyField
 
@@ -57,7 +58,7 @@ class MultiSigAddress(models.Model):
     address = models.CharField(max_length=256, null=True, blank=True)
     user_public_keys = models.ManyToManyField(UserAddress)
     minimum_signatures = models.PositiveIntegerField()
-    redeem_script = models.CharField(max_length=1000)
+    extra = JSONField(null=True)
 
     def __str__(self):
         return f"{self.currency}_{self.address}"

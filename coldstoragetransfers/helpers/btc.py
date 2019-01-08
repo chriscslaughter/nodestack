@@ -1,8 +1,7 @@
 import logging
-import json
 from decimal import Decimal
- 
-from lib.rpc import RPC, RPCException
+
+from lib.rpc import RPC
 from custody.models import Currency
 
 # Get an instance of a logger
@@ -68,7 +67,6 @@ class BTCHelper:
         return balance
 
     def generate_fee(self, input_count):
-        # https://gist.github.com/dabura667/1bb77d63d38bfd99a0ce453db74e0115
         """
         generated equation y = 303.9836x + 23.92763 using linear regression with
         inputs:
@@ -81,10 +79,11 @@ class BTCHelper:
         6               1848
         9               2741
         """
-        result = Decimal(303.9836 * input_count + 23.92763).quantize(DEFAULT_ZERO)
+        result = 303.9836 * input_count + 23.92763
         if input_count < 9:
             result += result * .05
-        return result
+        fee = (self.rpc.make_call('estimatesmartfee', [5])['feerate'] / 1000) * result
+        return Decimal(fee).quantize(DEFAULT_ZERO)
 
     def send_raw_transaction(self, transaction):
         txid = self.rpc.make_call('sendrawtransaction', [transaction])
