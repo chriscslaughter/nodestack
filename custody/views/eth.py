@@ -34,7 +34,7 @@ class ETHCustody(BaseCoin):
             'blocks': self._determine_final_block(),
             'latest_block_time': block.timestamp,
             'latest_block_age': (utc_now() - datetime.datetime.fromtimestamp(block.timestamp, datetime.timezone.utc)),
-            'fee_rate': self.w3.fromWei(self.w3.eth.gasPrice * 21000, 'ether')
+            'fee_rate': self.w3.fromWei(self.w3.eth.gasPrice * 21000, 'ether'),
             'required_confirmations': self.cur.required_confirmations
         }
         return Response(status_info, status=status.HTTP_200_OK)
