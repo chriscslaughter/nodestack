@@ -19,12 +19,10 @@ from django.conf.urls import url, include
 from django.views.generic.base import RedirectView
 
 from custody import urls as custody_urls
-from coldstoragetransfers import urls as coldstoragetransfers_urls
 
 urlpatterns = [
     url(r'^chaining/', include('smart_selects.urls')),
     url(r'^$', RedirectView.as_view(url='/admin')),
     path('admin/', admin.site.urls),
     path('api/', include(custody_urls)),
-    path('', include(coldstoragetransfers_urls))
 ]
