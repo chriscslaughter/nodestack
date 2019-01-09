@@ -22,7 +22,7 @@ class ETHCustody(BaseCoin):
     def __init__(self):
         self.cur = Currency.objects.get(symbol='ETH')
         self.w3 = Web3(Web3.HTTPProvider(self.cur.node.ip_address))
-        self.w3.eth.setGasPriceStrategy(web3.gas_strategies.time_based.medium_gas_price_strategy)
+        self.w3.eth.setGasPriceStrategy(self.w3.gas_strategies.time_based.medium_gas_price_strategy)
 
         #TODO: set addy
         self.hot_wallet_address = "0xd07a3060333de2002fd87e4e995227e7fab9e864"
