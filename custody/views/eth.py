@@ -4,7 +4,7 @@ import logging
 from rest_framework import status
 from rest_framework.response import Response
 from web3 import HTTPProvider, Web3
-from web3.gas_strategies.time_based import medium_gas_price_strategy
+from web3.gas_strategies.time_based import fast_gas_price_strategy
 
 from custody.views import BaseCoin
 from custody.models import Currency
@@ -36,7 +36,7 @@ class ETHCustody(BaseCoin):
             'blocks': final_block,
             'latest_block_time': block.timestamp,
             'latest_block_age': (utc_now() - datetime.datetime.fromtimestamp(block.timestamp, datetime.timezone.utc)),
-            'fee_rate': self.w3.fromWei(self.w3.eth.gasPrice * 21000, 'ether'),
+            'fee_rate': self.w3.fromWei(self.w3.eth.generateGasPrice() * 21000, 'ether'),
             'required_confirmations': self.cur.required_confirmations
         }
         return Response(status_info, status=status.HTTP_200_OK)
@@ -109,7 +109,7 @@ class ETHCustody(BaseCoin):
             "to": self.w3.toChecksumAddress(recipient),
             "from": self.w3.toChecksumAddress(self.hot_wallet_address),
             "value": self.w3.toWei(amount, 'ether'),
-            "gas":  self.w3.generateGasPrice()
+            "gas":  21000,
         }
         transaction = self.w3.eth.sendTransaction(transaction_details)
 
