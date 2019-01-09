@@ -4,6 +4,7 @@ import logging
 from rest_framework import status
 from rest_framework.response import Response
 from web3 import HTTPProvider, Web3
+from web3.gas_strategies.time_based import fast_gas_price_strategy
 
 from custody.views import BaseCoin
 from custody.models import Currency
@@ -18,12 +19,11 @@ This isn't a hard limit. Before processing a new block, if the transaction
 count exceeds the limit, we stop processing new blocks.
 """
 
-SCANNED_LIMIT = 2000
-
 class ETHCustody(BaseCoin):
     def __init__(self):
         self.cur = Currency.objects.get(symbol='ETH')
         self.w3 = Web3(Web3.HTTPProvider(self.cur.node.ip_address))
+        self.w3.eth.setGasPriceStrategy(fast_gas_price_strategy)
 
         #TODO: set addy
         self.hot_wallet_address = "0xd07a3060333de2002fd87e4e995227e7fab9e864"
@@ -31,12 +31,12 @@ class ETHCustody(BaseCoin):
     def get_status(self, request):
         final_block = self._determine_final_block()
         block = self.w3.eth.getBlock(final_block)
-        cold_storage_quantity = self._to_eth(self.w3.eth.getBalance(self.w3.toChecksumAddress(self.cur.cold_storage_address.address)))
+        # cold_storage_quantity = self.w3.fromWei(self.w3.eth.getBalance(self.w3.toChecksumAddress(self.cur.cold_storage_address.address)), 'ether')
         status_info = {
-            'blocks': self._determine_final_block(),
+            'blocks': final_block,
             'latest_block_time': block.timestamp,
             'latest_block_age': (utc_now() - datetime.datetime.fromtimestamp(block.timestamp, datetime.timezone.utc)),
-            'fee_rate': self._to_eth(self.w3.eth.gasPrice),
+            'fee_rate': self.w3.fromWei(self.w3.eth.generateGasPrice() * 21000, 'ether'),
             'required_confirmations': self.cur.required_confirmations
         }
         return Response(status_info, status=status.HTTP_200_OK)
@@ -52,20 +52,15 @@ class ETHCustody(BaseCoin):
     def list_transactions(self, request):
         block_counter = request.GET.get('block')
         if not block_counter:
-            Response({"message": "`block` must be provided"},
-                     status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            block_counter = self.cur.default_block_height
+
         block_counter = int(block_counter)
 
         final_block = int(request.GET.get('final' ,self._determine_final_block()))
         block = self.w3.eth.getBlock(block_counter)
         transactions = []
-        scanned = 0
         while(block and block_counter <= final_block):
-            if scanned > SCANNED_LIMIT:
-                final_block = block_counter
-                break
             for transaction in block['transactions']:
-                scanned += 1
                 transaction_details = self.w3.eth.getTransaction(transaction)
                 is_deposit = (
                     transaction_details.to and
@@ -85,7 +80,7 @@ class ETHCustody(BaseCoin):
                     continue
                 transactions.append({
                     'address': transaction_details.to,
-                    'amount': transaction_details.value,
+                    'amount': self.w3.fromWei(transaction_details.value, 'ether'),
                     'confirmations': self._determine_final_block() - transaction_details.blockNumber,
                     'txid': transaction.hex().lower(),
                     'time_received': block.timestamp,
@@ -113,7 +108,8 @@ class ETHCustody(BaseCoin):
         transaction_details = {
             "to": self.w3.toChecksumAddress(recipient),
             "from": self.w3.toChecksumAddress(self.hot_wallet_address),
-            "value": self.w3.toWei(amount, 'ether')
+            "value": self.w3.toWei(amount, 'ether'),
+            "gas":  21000,
         }
         transaction = self.w3.eth.sendTransaction(transaction_details)
 
@@ -125,6 +121,3 @@ class ETHCustody(BaseCoin):
 
     def _determine_final_block(self):
         return self.w3.eth.blockNumber or self.w3.eth.syncing['currentBlock']
-
-    def _to_eth(self, amount):
-        return amount / float(1000000000000000000)
