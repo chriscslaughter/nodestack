@@ -49,7 +49,7 @@ class BTCCustody(BaseCoin):
             block = self.cur.default_block_height
         block = int(block)
         block_hash = self.rpc.make_call("getblockhash", [block])
-        transactions = self.rpc.make_call("listsinceblock", [block_hash, self.cur.required_confirmations])
+        transactions = self.rpc.make_call("listsinceblock", [block_hash])
         block_height = self.rpc.make_call("getblock", [transactions["lastblock"]])["height"]
         result = {
             'lastblock': block_height,

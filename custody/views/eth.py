@@ -29,12 +29,12 @@ class ETHCustody(BaseCoin):
     def get_status(self, request):
         final_block = self._determine_final_block()
         block = self.w3.eth.getBlock(final_block)
-        # cold_storage_quantity = self._to_eth(self.w3.eth.getBalance(self.w3.toChecksumAddress(self.cur.cold_storage_address.address)))
+        # cold_storage_quantity = self.w3.fromWei(self.w3.eth.getBalance(self.w3.toChecksumAddress(self.cur.cold_storage_address.address)), 'ether')
         status_info = {
             'blocks': final_block,
             'latest_block_time': block.timestamp,
             'latest_block_age': (utc_now() - datetime.datetime.fromtimestamp(block.timestamp, datetime.timezone.utc)),
-            'fee_rate': self._to_eth(self.w3.eth.gasPrice),
+            'fee_rate': self.w3.fromWei(self.w3.eth.gasPrice * 21000, 'ether'),
             'required_confirmations': self.cur.required_confirmations
         }
         return Response(status_info, status=status.HTTP_200_OK)
@@ -118,6 +118,3 @@ class ETHCustody(BaseCoin):
 
     def _determine_final_block(self):
         return self.w3.eth.blockNumber or self.w3.eth.syncing['currentBlock']
-
-    def _to_eth(self, amount):
-        return amount / float(1000000000000000000)
