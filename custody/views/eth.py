@@ -50,8 +50,8 @@ class ETHCustody(BaseCoin):
     def list_transactions(self, request):
         block_counter = request.GET.get('block')
         if not block_counter:
-            Response({"message": "`block` must be provided"},
-                     status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            block_counter = self.cur.default_block_height
+
         block_counter = int(block_counter)
 
         final_block = int(request.GET.get('final' ,self._determine_final_block()))

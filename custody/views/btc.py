@@ -46,8 +46,7 @@ class BTCCustody(BaseCoin):
     def list_transactions(self, request):
         block = request.GET.get('block')
         if not block:
-            Response({"message": "`block` must be provided"},
-                     status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            block = self.cur.default_block_height
         block = int(block)
         block_hash = self.rpc.make_call("getblockhash", [block])
         transactions = self.rpc.make_call("listsinceblock", [block_hash, self.cur.required_confirmations])
