@@ -1,7 +1,12 @@
+from time import time
+import requests
+
 from django.db import models
-from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
+
+FEE = {}
+
 
 class TransferRequest(models.Model):
     user = models.ForeignKey(User, related_name='transfer_requests', on_delete=models.CASCADE)
@@ -11,6 +16,20 @@ class TransferRequest(models.Model):
     amount = models.DecimalField(max_digits=32, decimal_places=8)
     created_at = models.DateTimeField(auto_now_add=True)
     extra = JSONField(null=True)
+
+    @property
+    def fee_usd(self):
+        if 'fee' not in self.extra:
+            return 0
+        this_fee = FEE[self.extra['fee']]
+        if self.extra['fee'] in FEE and this_fee['timestamp'] + 300 > int(time()):
+            return this_fee['value']
+        else:
+            listings = requests.get("https://api.coinmarketcap.com/v2/listings/").json()["data"]
+            id_ = [listing["id"] for listing in listings if listing["symbol"] == self.symbol][0]
+            price = requests.get(f"https://api.coinmarketcap.com/v2/ticker/{id_}/").json()["data"]["quotes"]["USD"]["price"]
+            this_fee['value'] = price * self.extra['fee']
+            this_fee['timestamp'] = int(time()) + 300
 
     def __str__(self):
         return self.multisig_address.currency.symbol + '_' + \

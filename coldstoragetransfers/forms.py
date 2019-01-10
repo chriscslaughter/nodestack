@@ -15,7 +15,9 @@ class TransferRequestForm(forms.ModelForm):
         if not self.instance.pk:
             try:
                 self.instance.extra = {}
-                self.instance.extra['raw_transaction_body'] = btc.create_raw_transaction(self.cleaned_data['amount'], self.cleaned_data['multisig_address'].address)
+                raw_transaction_body, fee = btc.create_raw_transaction(self.cleaned_data['amount'], self.cleaned_data['multisig_address'].address)
+                self.instance.extra['raw_transaction_body'] = raw_transaction_body
+                self.instance.extra['fee'] = fee
             except ValueError:
                 raise ValidationError({'amount': _('The cold storage balance is less than the withdrawal amount.')})
 

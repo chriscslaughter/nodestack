@@ -73,7 +73,7 @@ class TransferRequestAdmin(admin.ModelAdmin):
         return btc.get_balance(obj.multisig_address.address)
 
     def fees(self, obj):
-        return 3
+        return obj.fee_usd
 
     def raw_transaction_body(self, obj):
         return obj.extra['raw_transaction_body']
