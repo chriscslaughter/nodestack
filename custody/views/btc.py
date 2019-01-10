@@ -40,7 +40,7 @@ class BTCCustody(BaseCoin):
         balance["hot_wallet"] = self.rpc.make_call('getbalance', ['*', self.cur.required_confirmations])
         #balance["hot_wallet"]["value"] = '${:,.2f}'.format(balance["hot_wallet"]["quantity"] * self.cur.price())
 
-        unspents = self.rpc.make_call('listunspent', [0, 999999, [self.cur.required_confirmations]])
+        unspents = self.rpc.make_call('listunspent', [0, 999999, [self.cur.cold_storage_address]])
         balance = sum([Decimal(unspent['amount']).quantize(DEFAULT_ZERO) for unspent in unspents])
         balance['cold_wallet'] = balance
         #balance["cold_storage"]["value"] = '${:,.2f}'.format(balance["cold_storage"]["quantity"] * self.cur.price())
