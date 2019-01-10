@@ -49,7 +49,7 @@ class BTCHelper:
         logger.debug('total: ' + str(total))
 
         outputs = {
-            self.cur.withdrawal_address: float(amount),
+            self.cur.withdrawals_address: float(amount),
             address: float(Decimal(total - full_amount).quantize(DEFAULT_ZERO))
         }
 
