@@ -23,9 +23,6 @@ class BTCHelper:
         self.rpc.make_call('importaddress', [create_payload['address'], "", False])
         return create_payload
 
-    def get_hot_wallet_address(self):
-        return self.rpc.make_call('getnewaddress')
-
     def create_raw_transaction(self, amount, address):
         unspents = self.rpc.make_call('listunspent', [self.required_confirmations, 999999, [address]])
 
@@ -53,7 +50,7 @@ class BTCHelper:
         logger.debug('total: ' + str(total))
 
         outputs = {
-            self.get_hot_wallet_address(): float(amount),
+            self.cur.withdrawals_address: float(amount),
             address: float(Decimal(total - full_amount).quantize(DEFAULT_ZERO))
         }
 

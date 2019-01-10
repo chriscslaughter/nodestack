@@ -17,7 +17,7 @@ class Currency(models.Model):
     required_confirmations = models.PositiveIntegerField(null=True)
     transfer_threshold = models.PositiveIntegerField(default=1)
     default_block_height = models.PositiveIntegerField(default=0)
-    withdrawal_address = models.CharField(null=True)
+    withdrawals_address = models.CharField(null=True, max_length=100)
 
     def name(self):
         return dict(CURRENCY_CHOICES)[self.symbol]
