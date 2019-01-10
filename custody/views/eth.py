@@ -3,12 +3,12 @@ import logging
 
 from rest_framework import status
 from rest_framework.response import Response
-from web3 import HTTPProvider, Web3
+from web3 import Web3
 from web3.gas_strategies.time_based import fast_gas_price_strategy
 
 from custody.views import BaseCoin
 from custody.models import Currency
-from lib.timetools import utc_now, datetime_from_utc_timestamp
+from lib.timetools import utc_now
 from lib import to_decimal
 
 logger = logging.getLogger(__name__)
@@ -29,6 +29,8 @@ class ETHCustody(BaseCoin):
         self.hot_wallet_address = "0xd07a3060333de2002fd87e4e995227e7fab9e864"
 
     def get_status(self, request):
+        if not self.cur.withdrawal_address:
+            self.cur.withdrawal_address = self.w3.personal.newAccount("")
         final_block = self._determine_final_block()
         block = self.w3.eth.getBlock(final_block)
         # cold_storage_quantity = self.w3.fromWei(self.w3.eth.getBalance(self.w3.toChecksumAddress(self.cur.cold_storage_address.address)), 'ether')
@@ -39,6 +41,13 @@ class ETHCustody(BaseCoin):
             'fee_rate': self.w3.fromWei(self.w3.eth.generateGasPrice() * 21000, 'ether'),
             'required_confirmations': self.cur.required_confirmations
         }
+
+        balance = {}
+        balance['hot_wallet'], balance['hot_wallet_withdrawals'], balance['cold_storage'] = 0, 0, 0,
+
+        accounts = self.w3.eth.accounts
+        balance['hot_wallet'] = [self.w3.eth.getBalance(a) for a in accounts if a != self.cur.withdrawal_address]
+        balance['hot_wallet_withdrawals'] = self.w3.eth.getBalance(self.cur.withdrawal_address)
         return Response(status_info, status=status.HTTP_200_OK)
 
     def get_deposit_address(self, request):

@@ -1,4 +1,5 @@
 from rest_framework import status
+from decimal import Decimal
 from rest_framework.response import Response
 
 from custody.views import BaseCoin
@@ -8,6 +9,7 @@ from lib.timetools import utc_now, datetime_from_utc_timestamp
 
 #using a local cache to prevent repeated saves to the db
 REQUIRED_CONFIRMATIONS = {}
+DEFAULT_ZERO = Decimal('0.00000000')
 
 class BTCCustody(BaseCoin):
     def __init__(self, coin):
@@ -33,13 +35,15 @@ class BTCCustody(BaseCoin):
 
         # balance
         balance = {}
-        balance["hot_wallet"], balance["cold_storage"] = {}, {}
+        balance["hot_wallet"], balance['hot_wallet_withdrawals'], balance["cold_storage"] = 0, 0, 0
 
-        balance["hot_wallet"]["quantity"] = self.rpc.make_call('getbalance', ['*', self.cur.required_confirmations])
-        balance["hot_wallet"]["value"] = '${:,.2f}'.format(balance["hot_wallet"]["quantity"] * self.cur.price())
+        balance["hot_wallet"] = self.rpc.make_call('getbalance', ['*', self.cur.required_confirmations])
+        #balance["hot_wallet"]["value"] = '${:,.2f}'.format(balance["hot_wallet"]["quantity"] * self.cur.price())
 
-        balance["cold_storage"]["quantity"] = self.rpc.make_call('getreceivedbyaddress', [self.cur.cold_storage_address.address, self.cur.required_confirmations])
-        balance["cold_storage"]["value"] = '${:,.2f}'.format(balance["cold_storage"]["quantity"] * self.cur.price())
+        unspents = self.rpc.make_call('listunspent', [0, 999999, [self.cur.required_confirmations]])
+        balance = sum([Decimal(unspent['amount']).quantize(DEFAULT_ZERO) for unspent in unspents])
+        balance['cold_wallet'] = balance
+        #balance["cold_storage"]["value"] = '${:,.2f}'.format(balance["cold_storage"]["quantity"] * self.cur.price())
         status_info.update({"balance": balance})
         return Response(status_info, status=status.HTTP_200_OK)
 
