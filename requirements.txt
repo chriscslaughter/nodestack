@@ -22,7 +22,7 @@ django-bootstrap4==0.0.7
 django-rest-framework==0.1.0
 django-smart-selects==1.5.4
 djangorestframework==3.8.2
-ecdsa==0.13
+ecdsa==0.13.3
 eth-abi==1.2.1
 eth-account==0.3.0
 eth-hash==0.2.0
